@@ -1,0 +1,22 @@
+.App {
+  margin-top: 100px;
+}
+
+.search-bar {
+  width: 250px;
+  margin: 0 auto;
+}
+
+.search-bar-input {
+  display: block;
+}
+
+
+.product-table {
+  width: 250px;
+  margin: 0 auto;
+}
+
+.product-table-title {
+  text-align: left;
+}
