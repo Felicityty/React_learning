@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sandBox</title>
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+<!-- This setup is not suitable for production. -->
+<!-- Only use it in development! -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react?dev",
+    "react-dom/client": "https://esm.sh/react-dom/client?dev"
+  }
+}
+</script>
+<script type="text/babel" data-type="module">
+  import React, { StrictMode } from 'react'
+  import { createRoot } from 'react-dom/client'
+
+  // export default function Square() {
+  //   return <button class="square">X</button>
+  // }
+  function Square() {
+    return (
+      <button >X</button>
+    )
+  }
+
+  // return (
+  //   <>
+  //     <Square />
+  //   </>
+  // )
+
+
+  const root = createRoot(document.getElementById('root'))
+  root.render(
+    <Square></Square>
+    // <StrictMode>
+    //   {value}
+    // </StrictMode>
+  )
+
+</script>
+
+</html>
