@@ -1,21 +1,23 @@
-import logo from './logo.svg';
-import './App.css';
-import { useState } from 'react';
+import logo from './logo.svg'
+import './App.css'
+import { useState } from 'react'
 
+// camelCase 
 
 function ProductCategoryRow({ category }) {
   return (
     <tr>
-      <th colSpan="2">
-        {category}
-      </th>
+      <th colSpan="2">{category}</th>
     </tr>
   )
 }
 
 function ProductRow({ product }) {
-  const name = product.stocked ? product.name :
+  const name = product.stocked ? (
+    product.name
+  ) : (
     <span style={{ color: 'red' }}>{product.name}</span>
+  )
 
   return (
     <tr>
@@ -29,7 +31,7 @@ function ProductTable({ products, filterText, inStockOnly }) {
   const rows = []
   let lastCategory = null
 
-  products.forEach(product => {
+  products.forEach((product) => {
     if (product.name.toLowerCase().indexOf(filterText.toLowerCase()) === -1) {
       return
     }
@@ -51,7 +53,7 @@ function ProductTable({ products, filterText, inStockOnly }) {
       ></ProductRow>
     )
     lastCategory = product.category
-  });
+  })
 
   return (
     <table className="product-table">
@@ -61,20 +63,32 @@ function ProductTable({ products, filterText, inStockOnly }) {
           <th>Price</th>
         </tr>
       </thead>
-      <tbody className="product-table-text">
-        {rows}
-      </tbody>
+      <tbody className="product-table-text">{rows}</tbody>
     </table>
   )
 }
 
-function SearchBar({ filterText, inStockOnly, onFilterTextChange, onInStockOnlyChange }) {
+function SearchBar({
+  filterText,
+  inStockOnly,
+  onFilterTextChange,
+  onInStockOnlyChange,
+}) {
   return (
     <form className="search-bar">
-      <input type="text" placeholder="Search..." className="search-bar-input" value={filterText} onChange={(e) => onFilterTextChange(e.target.value)}></input>
+      <input
+        type="text"
+        placeholder="Search..."
+        className="search-bar-input"
+        value={filterText}
+        onChange={(e) => onFilterTextChange(e.target.value)}
+      ></input>
       <label className="search-bar-table">
-        <input type="checkbox" checked={inStockOnly} onChange={(e) => onInStockOnlyChange(e.target.checked)}></input>
-        {' '}
+        <input
+          type="checkbox"
+          checked={inStockOnly}
+          onChange={(e) => onInStockOnlyChange(e.target.checked)}
+        ></input>{' '}
         Only show products in stock
       </label>
     </form>
@@ -87,27 +101,66 @@ function FilterableProductTable({ products }) {
 
   return (
     <div className="filterable-product-table">
-      <SearchBar filterText={filterText} inStockOnly={inStockOnly} onFilterTextChange={setFilterText} onInStockOnlyChange={setInStockOnly}></SearchBar>
-      <ProductTable products={products} filterText={filterText} inStockOnly={inStockOnly}></ProductTable>
+      <SearchBar
+        filterText={filterText}
+        inStockOnly={inStockOnly}
+        onFilterTextChange={setFilterText}
+        onInStockOnlyChange={setInStockOnly}
+      ></SearchBar>
+      <ProductTable
+        products={products}
+        filterText={filterText}
+        inStockOnly={inStockOnly}
+      ></ProductTable>
     </div>
   )
 }
 
 const PRODUCTS = [
-  { category: "Fruits", price: "$1", stocked: true, name: "Apple" },
-  { category: "Fruits", price: "$1", stocked: true, name: "Dragonfruit" },
-  { category: "Fruits", price: "$2", stocked: false, name: "Passionfruit" },
-  { category: "Vegetables", price: "$2", stocked: true, name: "Spinach" },
-  { category: "Vegetables", price: "$4", stocked: false, name: "Pumpkin" },
-  { category: "Vegetables", price: "$1", stocked: true, name: "Peas" }
-];
+  {
+    category: 'Fruits',
+    price: '$1',
+    stocked: true,
+    name: 'Apple',
+  },
+  {
+    category: 'Fruits',
+    price: '$1',
+    stocked: true,
+    name: 'Dragonfruit',
+  },
+  {
+    category: 'Fruits',
+    price: '$2',
+    stocked: false,
+    name: 'Passionfruit',
+  },
+  {
+    category: 'Vegetables',
+    price: '$2',
+    stocked: true,
+    name: 'Spinach',
+  },
+  {
+    category: 'Vegetables',
+    price: '$4',
+    stocked: false,
+    name: 'Pumpkin',
+  },
+  {
+    category: 'Vegetables',
+    price: '$1',
+    stocked: true,
+    name: 'Peas',
+  },
+]
 
 function App() {
   return (
     <div className="App">
       <FilterableProductTable products={PRODUCTS}></FilterableProductTable>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
