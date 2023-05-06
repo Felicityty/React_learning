@@ -1635,7 +1635,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<Component1 />);
 ```
 
-
+- 还像watch啊，一个变量依赖另一个变量的值动态变化，也用它啊
 
 - 使用 `useEffect` 时传入的函数简写要小心，它接收一个无返回值函数或一个清除函数。
 
@@ -1987,6 +1987,34 @@ ts的类型检查好痛苦，但也有点C++的感觉
 - **让函数组件也能做类组件的事，有自己的状态，可以处理一些副作用，能获取 ref ，也能做数据缓存**
 - **解决逻辑复用难的问题**
 - **放弃面向对象编程，拥抱函数式编程**
+
+
+
+# searchList
+
+2023-5-6
+
+### input 设置默认值
+
+1、text
+
+```react
+<input type="text" defaultValue={默认值} /> 
+```
+
+直接value的话就不能更改了，昨天用了useState的方法配合，不合适啊
+
+2、checkbox
+
+```react
+<input type="checkbox" defaultChecked={true} />
+```
+
+直接checked也是不能改值了
+
+
+
+
 
 
 
