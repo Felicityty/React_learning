@@ -1,0 +1,35 @@
+.activityCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 2.9333333333vw;
+  font-weight: 500;
+  color: #737373;
+  .activityCard-img {
+    width: 31.6vw;
+    height: 11.3193403298vh;
+    border-radius: 1.6vw;
+  }
+  .activityCard-title {
+    font-size: 3.3333333333vw;
+    font-weight: 500;
+    color: #38393c;
+    margin-bottom: 0.8245877061vh;
+  }
+  .activityCard-date {
+    margin-bottom: 0.8245877061vh;
+  }
+  .activityCard-status {
+    margin-bottom: 0.8245877061vh;
+  }
+  .activityCard-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .activityCard-num {
+    font-size: 3.3333333333vw;
+    font-weight: bold;
+    color: #f62f2f;
+  }
+}

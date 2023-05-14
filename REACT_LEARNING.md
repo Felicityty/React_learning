@@ -1941,6 +1941,68 @@ function useTuple() {
 
 
 
+# TS 的坑坑坑🕳️
+
+### 01 使用context，value一直报错
+
+![image-20230511222855344](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230511222855344.png)
+
+虽然知道是类型的错误，但想了半天也没出来是哪里的问题
+
+![image-20230511223024351](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230511223024351.png)
+
+是在createContext的时候设定默认值的类型不对，改成一样的就好啦
+
+
+
+### 02 useEffect疯狂报错 但是不需要添加这个依赖
+
+![image-20230512134753799](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512134753799.png)
+
+` // eslint-disable-next-line react-hooks/exhaustive-deps `
+
+上面加一句话，跳过这个eslint检查
+
+但我也不知道合不合适诶，运行没问题
+
+
+
+### 03 props-type报错
+
+![image-20230512140236236](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140236236.png)
+
+![image-20230512140255527](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140255527.png)
+
+很奇怪，明明用了FromProps定义了，但用结构赋值就是显示缺失规则
+
+![image-20230512140551852](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140551852.png)
+
+那就只能把prop-types规则禁用掉了
+
+
+
+04 
+
+![image-20230512140855548](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140855548.png)
+
+![image-20230512140918048](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140918048.png)
+
+同样增加规则
+
+`'no-param-reassign': 0,`
+
+
+
+
+
+
+
+
+
+
+
+
+
 # todoList
 
 2023-5-5

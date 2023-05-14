@@ -1,0 +1,30 @@
+.home {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f3f3f3;
+  .swiper-img {
+    width: 100%;
+    height: 31.7091454273vh;
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .activity-box {
+    padding: 0 3.2vw;
+    font-size: 3.8666666667vw;
+    font-weight: 500;
+    color: #38393c;
+    margin-top: 2.6986506747vh;
+    margin-bottom: 10px;
+  }
+  .activity-list {
+    height: 350px;
+    overflow-y: scroll;
+  }
+  .empty {
+    width: 100%;
+    height: 100px;
+  }
+}

@@ -1,0 +1,52 @@
+.activityDetail {
+  background-color: #f3f3f3;
+  width: 100%;
+  height: 100vh;
+  overflow-y: scroll;
+  .activityDetail-box {
+    width: 100%;
+    height: 100%;
+  }
+  .activity-box {
+    padding: 2.2488755622vh 4vw;
+  }
+  .activity-content {
+    background-color: white;
+    padding: 2.2488755622vh 4vw;
+    background: white;
+    font-size: 2.9333333333vw;
+    font-weight: 500;
+    color: #737373;
+  }
+  .activity-img {
+    width: 100%;
+    height: 29.6101949025vh;
+  }
+  .activity-title {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 4vw;
+    font-weight: 500;
+    color: #38393c;
+    margin: 2.7736131934vh 0;
+  }
+  .submit-btn {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 91.7333333333vw;
+    height: 5.6971514243vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f62f2f;
+    color: white;
+  }
+  .empty {
+    width: 100%;
+    height: 5.6971514243vh;
+  }
+}
