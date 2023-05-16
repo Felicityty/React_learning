@@ -1995,14 +1995,6 @@ function useTuple() {
 
 
 
-
-
-
-
-
-
-
-
 # todoList
 
 2023-5-5
@@ -2075,6 +2067,22 @@ ts的类型检查好痛苦，但也有点C++的感觉
 直接checked也是不能改值了
 
 
+
+# dynamicForm
+
+2023-5-12
+
+节点的上下移动、删除和表单验证无关，不需要放到组件中去
+
+之后就是和vue一样的逻辑去拆分组件，这次就拆俩
+
+ElForm组件：暴露一个ref去调用表单的全局表单验证，传入绑定的表单数据、校验规则
+
+ElFormItem组件：传入每一项的label和校验规则绑定的prop，进行局部表单验证
+
+利用上下文来进行依赖注入，ElForm抛一个钩子给ElFormItem，让ElFormItem来执行回调
+
+立即创建和重置按钮的逻辑都是这样的，比如立即创建按钮，就是每次加载ElForm组件的时候，把每一个ElFormItem的validate函数放到一个数组里，等到执行onClick时遍历这个数组，执行数组中的每个validate函数
 
 
 
