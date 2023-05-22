@@ -1,3 +1,5 @@
+
+
 # React
 
 ## 01 - 搭建react项目
@@ -2157,7 +2159,253 @@ https://mobile.ant.design/zh/guide/ssr
 
 暂时只找到了最新两个版本的方法，但都不适用于更早的版本
 
-再研究研究呗🤜🤛
+en 确实只能版本升级了
+
+
+
+### 06 引入全局scss样式
+
+在 `_app.js` 文件里写就行
+
+![image-20230523002518911](REACT_LEARNING.assets/image-20230523002518911.png)
+
+其他scss文件中引入其他的scss文件：
+
+![image-20230523002617907](REACT_LEARNING.assets/image-20230523002617907.png)
+
+
+
+### 07 react-meta-tag库
+
+用于在 React 应用程序中管理和设置网页的 `<meta>` 标签
+
+<meta> 标签是用于提供有关网页内容的元数据的 HTML 元素。它们通常位于网页的 <head> 部分，并提供关于网页的信息，如页面的描述、关键字、作者、视口设置等。
+通过在 React 组件中使用 `react-meta-tags`，你可以动态地根据组件状态或数据设置不同的 `<meta>` 标签
+
+👉 这对于优化搜索引擎优化 (SEO)、社交分享、网页分析等方面非常有用。
+
+```react
+import React from 'react';
+import MetaTags from 'react-meta-tags';
+
+function MyComponent() {
+  return (
+    <>
+      <MetaTags>
+        <title>My Page Title</title>
+        <meta name="description" content="This is the description of my page" />
+      </MetaTags>
+      
+      {/* Rest of your component */}
+    </>
+  );
+}
+
+export default MyComponent;
+```
+
+BUT! 😭 支持到react16，拜拜
+
+
+
+### 08 ahooks库
+
+提供一些常用的自定义 Hooks
+
+https://ahooks.js.org/zh-CN/hooks/use-request/index
+
+https://mobile.ant.design/zh/components/infinite-scroll
+
+用了一下useCounter，配合页面的无限滚动，en 这里改成ssr就不大好改了🤔
+
+```react
+import react, { useState } from 'react';
+import { useCounter } from 'ahooks';
+import { InfiniteScroll, Empty } from 'antd-mobile';
+import getboardPostList, { IResDataResultItem } from '@/services/@mocker/xxx';
+
+import ListItem from '@/pages/bbs/board/component/ListItem';
+
+const TabList = ({ boardId, orderType = 0, postType = 0 }) => {
+  const [list, setList] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [current, { inc }] = useCounter(1, { min: 1 });
+
+  async function loadMore() {
+    if (hasMore) {
+      const res = await getboardPostList({
+        boardId,
+        postType,
+        orderType,
+        pageNum: current,
+        pageSize: 20,
+      });
+      if (res.data) {
+        inc();
+
+        const { lastPage, result } = res.data || {};
+        setHasMore(!lastPage);
+
+        setList((val) => [...val, ...result]);
+      }
+    }
+  }
+
+  if (current > 1 && list.length < 1) {
+    return (
+      <div>
+        <Empty
+          image={
+            <img
+              src={require('./assets/empty_icon.png')}
+              style={{ width: '140px', height: '180px' }}
+            />
+          }
+          description=""
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {list.map((item, index) => (
+        <ListItem
+          key={index + String(item.postId)}
+          id={item.postId}
+          title={item.subject}
+          nickname={item.postUser?.nickname}
+          reads={item.reads}
+          imgUrl={item.screenUrlList && item.screenUrlList[0]}
+          isVideo={item.videoScreen}
+          videoState={item.postVideo?.userVideoState}
+        />
+      ))}
+      <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
+    </>
+  );
+};
+
+export default TabList;
+
+```
+
+
+
+### 09 classnames库
+
+👉 使用场景：需要使用js来动态判断是否为组件添加class（类名）
+
+使用：
+
+```react
+import cls from 'classnames';
+
+<a className={cls(styles.tabsHeaderTab, { [styles.activeTab]: selectedTab === 'recommend'})}></a>
+```
+
+不使用：
+
+```
+<a className={`${styles.tabsHeaderTab} ${selectedTab === 'recommend' ? styles.activeTab : ''}`}></a>
+```
+
+
+
+### 10 给url加上query
+
+👉 使用场景：
+
+使用ssr，所有请求需要在dom加载之前
+
+一个页面中存在切换全部和推荐列表的需求，请求列表需要在`getServerSideProps`中完成
+
+（按以前的在组件内部发送请求就不合适了）
+
+👉 解决方案：
+
+把请求列表拿到最外层的pages底下的文件中，把全部和推荐的切换转化成url的query
+
+在`getServerSideProps`中可以拿到当前的query，去匹配不同的请求参数，再发送请求拿数据
+
+```react
+……
+import { useRouter } from 'next/router';
+……
+
+export default function Board(props) {
+  console.log('props', props);
+  const router = useRouter();
+  const { query } = router.query
+……
+
+  return (
+    <Bbs className={styles.flexBox}>
+      ……
+      <section className={styles.postListWrap}>
+        <div className={styles.tabsHeader}>
+          <a
+            className={cls(styles.tabsHeaderTab, { [styles.activeTab]: selectedTab === 'all' })}
+            onClick={() => {
+              setSelectedTab('all');
+            }}
+            href={`/bbs/board/${boardId}?query=all`}
+          >
+            全部
+          </a>
+          <a
+            className={cls(styles.tabsHeaderTab, {
+              [styles.activeTab]: selectedTab === 'recommend',
+            })}
+            onClick={() => {
+              setSelectedTab('recommend');
+            }}
+            href={`/bbs/board/${boardId}?query=recommend`}
+          >
+            推荐
+          </a>
+        </div>
+        <div className={cls(styles.tabsContent, { hide: selectedTab !== 'all' })}>
+          <TabList topList={topList} />
+        </div>
+        <div className={cls(styles.tabsContent, { hide: selectedTab !== 'recommend' })}>
+          <TabList topList={topList} />
+        </div>
+      </section>
+    </Bbs>
+  );
+}
+
+export async function getServerSideProps(ctx) {
+  const { query, params } = ctx;
+  const queryValue = query.query;
+  const { boardId } = params;
+  const postType = queryValue === 'all' ? 0 : 5
+  const orderType = queryValue === 'all' ? 1 : 0
+
+  const [boardDetail, topList] = await Promise.all([
+    getBoardDetail({ boardId }),
+    getTopList({
+      boardId,
+      postType: postType || 0,
+      orderType: orderType || 0,
+      pageNum: 1,
+      pageSize: 20,
+    }),
+  ]);
+
+  return {
+    props: {
+      data: {
+        boardId,
+        boardDetail: boardDetail || {},
+        topList: topList || [],
+        queryValue: queryValue || ""
+      },
+    },
+  };
+}
+```
 
 
 
@@ -2230,9 +2478,23 @@ https://mobile.ant.design/zh/guide/ssr
 
 
 
+# 乱七八糟的坑坑坑🕳️
+
+#### 01 a标签嵌套div，让a标签的同级div类名失效
 
 
 
+#### 02 left0 right0 深度理解
 
+nextjs似乎在 `_document.js` 中自带了一个margin，很讨厌
 
+直接去掉好像也不大好
+
+也只剩HeaderBody组件没脱标了，干脆也让它脱标使用fixed的
+
+脱标之后这里啊一定得加，不然不居中布局呀
+
+使用了媒体查询，设置了max-width，不设置就跑到左边去了
+
+![image-20230523011126835](REACT_LEARNING.assets/image-20230523011126835.png)
 
