@@ -2090,7 +2090,7 @@ ElFormItem组件：传入每一项的label和校验规则绑定的prop，进行�
 
 
 
-# nextjs
+# nextjs（项目中遇到的）
 
 ### 01 window is not defined
 
@@ -2409,6 +2409,30 @@ export async function getServerSideProps(ctx) {
 
 
 
+### 11 dangerouslySetInnerHTML属性
+
+在 React 中，为了防止跨站脚本攻击（XSS）和其他安全问题，通常需要对用户输入的 HTML 进行转义或过滤处理。然而，有时候我们需要将特定的 HTML 字符串直接渲染到组件中，而不进行额外的转义处理
+
+将一个包含原始 HTML 内容的对象赋值给组件的 `dangerouslySetInnerHTML` 属性，从而将该 HTML 内容直接渲染到组件中，而不进行自动的转义或过滤
+
+具体使用方式如下：
+
+```react
+<div dangerouslySetInnerHTML={{ __html: htmlContent }}></div>
+```
+
+确实很危险，恶意脚本威胁
+
+
+
+### 12 jshooks
+
+是和window对象一样，定义的全局对象
+
+拥有自己的数据和暴露在外面的api
+
+
+
 
 
 
@@ -2476,6 +2500,10 @@ export async function getServerSideProps(ctx) {
 
   
 
+### 全局node版本切换：
+
+
+
 
 
 # 乱七八糟的坑坑坑🕳️
@@ -2498,3 +2526,23 @@ nextjs似乎在 `_document.js` 中自带了一个margin，很讨厌
 
 ![image-20230523011126835](REACT_LEARNING.assets/image-20230523011126835.png)
 
+
+
+#### 03 cannot reassign to an imported binding
+
+import { HTMLReactParserOptions, Element, domToReact } from 'html-react-parser'; 
+
+```
+import { HTMLReactParserOptions, Element, domToReact } from 'html-react-parser';
+
+const myHTMLReactParserOptions = { ...HTMLReactParserOptions };
+// Use myHTMLReactParserOptions in your code instead of HTMLReactParserOptions
+```
+
+
+
+#### 04 每个页面<head>加入iconfont.js
+
+在每个页面加载时，`iconfont.js` 脚本将被引入到应用程序的 `<head>` 部分，并在整个应用程序中生效
+
+![image-20230529113135320](REACT_LEARNING.assets/image-20230529113135320.png)
