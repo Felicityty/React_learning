@@ -1,5 +1,3 @@
-
-
 # React
 
 ## 01 - 搭建react项目
@@ -2431,9 +2429,45 @@ export async function getServerSideProps(ctx) {
 
 拥有自己的数据和暴露在外面的api
 
+这边的res就是从那里拿到的
+
+![image-20230530102835440](REACT_LEARNING.assets/image-20230530102835440.png)
 
 
 
+### 13 html-react-parser库 - parse
+
+用到了parse的replace，对于后端返回的字符串做一系列处理
+
+https://www.npmjs.com/package/html-react-parser
+
+![image-20230604005352853](REACT_LEARNING.assets/image-20230604005352853.png)
+
+我懂了，这里是因为实际上有image、video和link这几种标签，但是后端返回的通通是img标签，只是img标签内部的有不同的属性来区分
+
+1 利用 `content.replace(/<(?![a-zA-Z/?!])/g, '&lt;')` 来阻止浏览器直接解析为 HTML的img标签
+
+2 利用 `parse` 来替换元素
+
+```react
+parse ( '<p id="replace">text</p>' ,  { 
+  replace : domNode  =>  { 
+    if  ( domNode . attribs  &&  domNode . attribs . id  ===  'replace' )  { 
+      return  < span >替换< /跨度> ; 
+    } 
+  } 
+} ) ;
+```
+
+这边最后返回一个replace
+
+![image-20230604010020606](REACT_LEARNING.assets/image-20230604010020606.png)
+
+replaceFn的大致逻辑就是根据标签内的属性去区别元素的种类，再去根据种类来渲染自定义的组件
+
+![image-20230604010222852](REACT_LEARNING.assets/image-20230604010222852.png)
+
+虽然不大明白为啥后端为啥要这样返回，但总之还是有点绝的
 
 
 
@@ -2500,7 +2534,9 @@ export async function getServerSideProps(ctx) {
 
   
 
-### 全局node版本切换：
+# 全局node版本切换：
+
+nvm
 
 
 
@@ -2508,11 +2544,11 @@ export async function getServerSideProps(ctx) {
 
 # 乱七八糟的坑坑坑🕳️
 
-#### 01 a标签嵌套div，让a标签的同级div类名失效
+### 01 a标签嵌套div，让a标签的同级div类名失效
 
 
 
-#### 02 left0 right0 深度理解
+### 02 left0 right0 深度理解
 
 nextjs似乎在 `_document.js` 中自带了一个margin，很讨厌
 
@@ -2528,21 +2564,124 @@ nextjs似乎在 `_document.js` 中自带了一个margin，很讨厌
 
 
 
-#### 03 cannot reassign to an imported binding
+### 03 cannot reassign to an imported binding
 
-import { HTMLReactParserOptions, Element, domToReact } from 'html-react-parser'; 
+`import { HTMLReactParserOptions, Element, domToReact } from 'html-react-parser'; `
 
-```
+原因是导入的被重新赋值了，这下面的也不对，这个是原来ts项目来做类型检查的，不是导入的一个函数，所以使用方法错了，直接把函数的那一部分删掉就行了
+
+```react
 import { HTMLReactParserOptions, Element, domToReact } from 'html-react-parser';
 
 const myHTMLReactParserOptions = { ...HTMLReactParserOptions };
 // Use myHTMLReactParserOptions in your code instead of HTMLReactParserOptions
 ```
 
+![image-20230531101434497](REACT_LEARNING.assets/image-20230531101434497.png)
+
+原来：
+
+![image-20230531102002320](REACT_LEARNING.assets/image-20230531102002320.png)
+
+改成：
+
+![image-20230531102043660](REACT_LEARNING.assets/image-20230531102043660.png)
 
 
-#### 04 每个页面<head>加入iconfont.js
+
+### 04 每个页面`<head>`加入iconfont.js
 
 在每个页面加载时，`iconfont.js` 脚本将被引入到应用程序的 `<head>` 部分，并在整个应用程序中生效
 
 ![image-20230529113135320](REACT_LEARNING.assets/image-20230529113135320.png)
+
+在_document.js文件的head标签里加上这个script
+
+![image-20230531100059493](REACT_LEARNING.assets/image-20230531100059493.png)
+
+
+
+### 05 使用了可选链操作符 `?.` 来保护属性的访问
+
+不然就报错啦，养成习惯
+
+![image-20230530180603107](REACT_LEARNING.assets/image-20230530180603107.png)
+
+![image-20230530180617073](REACT_LEARNING.assets/image-20230530180617073.png)
+
+
+
+### 06 Switch-Route嵌套二级路由
+
+新的ssr项目技术栈就是纯纯webpack和react搭建的
+
+路由就是用Switch-Route来完成的
+
+![image-20230604003125093](REACT_LEARNING.assets/image-20230604003125093.png)
+
+由于这次的页面需要二级路由嵌套，得在组件中再嵌套个Switch-Route，但是很奇怪就是没反应，不管怎样都渲染的是第一个组件
+
+后来尝试了一下，原来第一个Route里加个 `exact` 就生效了，是因为在不加的时候进行的都是模糊匹配，直接就匹配上了，不管咋样都不会渲染后来的组件了
+
+确实还挺坑的
+
+![image-20230604003440680](REACT_LEARNING.assets/image-20230604003440680.png)
+
+
+
+### 07 webpack的file-loader配置
+
+[一个奇怪的引入图片错误，而引发的血雨腥风](https://segmentfault.com/a/1190000038507183)
+
+[为啥要用require引入图片，这篇说得巨明白🫡](https://www.cnblogs.com/lisongming/p/16839892.html)
+
+👉 为啥用require导入：
+
+> webpack中的打包规则，针对的其实是一个一个模块，换而言之，webpack只会对模块进行打包。那webpack怎么将图片当成一个模块呢，这就要用到 `require`
+>
+> 当我们使用require方法引入一张图片的时候，webpack会将这张图片当成一个模块，并根据配置文件中的规则进行打包。🌟**我们可以将require当成一个桥梁，使用了require方法引入的资源，该资源就会当成模块并根据配置文件进行打包，并返回最终的打包结果**🌟
+
+nextjs项目中不建议用require导入静态资源，可以用它的Image标签
+
+但是webpack搭建的项目就都可以用啦  ||  umi项目用require也仅仅是一种语法🍬，实际上还是import导入的
+
+自己用webpack搭的就需要配置一下，得加下面那句话，否则会 `[object%20Module]` 这样报错诶
+
+![image-20230604012325929](REACT_LEARNING.assets/image-20230604012325929.png)
+
+
+
+### 08 antd引入 `'antd/es/locale/zh_CN'` 报错
+
+这还真挺奇怪的，就是不能加入这个语言包，一加就报错
+
+![image-20230601180605946](REACT_LEARNING.assets/image-20230601180605946.png)
+
+![image-20230601180550085](REACT_LEARNING.assets/image-20230601180550085.png)
+
+👉 破案：
+
+新项目用的antd3，没有内置的 `zhCN` 语言包，但可以使用 `antd/lib/locale-provider/zh_CN` 导入中文语言包
+
+```react
+import zhCN from 'antd/lib/locale-provider/zh_CN';
+```
+
+这样就行了😭 可恶
+
+
+
+
+
+# 那就偷学点儿🤫：
+
+轮询
+
+应用场景……
+
+
+
+
+
+
+
