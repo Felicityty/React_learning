@@ -877,6 +877,15 @@ function handleToggleMyList(artworkId, nextSeen) {
 
 
 
+## 07 - fragment
+
+React Fragment 是 React 中的一个特性，它允许你对一组子元素进行分组，而无需向 DOM 添加额外的节点，从而允许你从 React 组件中返回多个元素
+
+- 在Vue2中，template里不能有多个根组件存在
+
+- 但Vue3支持**Fragments**，这意味着组件可以具有多个根节点
+- React也一样支持**Fragments**，而且还提供了一个简写符号 `<></>` 将多个元素封装在一起，其工作原理与 React Fragment 类似，但内存负载更低
+
 
 
 
@@ -1965,6 +1974,8 @@ function useTuple() {
 
 但我也不知道合不合适诶，运行没问题
 
+👉 应该没问题，我在其他项目里看到这么用的了
+
 
 
 ### 03 props-type报错
@@ -2471,6 +2482,73 @@ replaceFn的大致逻辑就是根据标签内的属性去区别元素的种类�
 
 
 
+### 14 不允许爬虫爬取某个页面
+
+使用场景：
+
+项目中的用户页不必要被爬虫爬取，故只需加上rel就行了
+
+```react
+<a
+  className={cls(Styles.AvatarInfo, className)}
+  rel="noopener nofollow"
+  href={`${originURL}/bbs/user/${url}`}
+>
+```
+
+#### `noopener`
+
+当给链接加上 `target="_blank"` 后， 目标网页会在新的标签页中打开， 此时在新打开的页面中可通过 `window.opener` 获取到源页面的 `window` 对象， 这就埋下了安全隐患
+
+具体来说：
+
+- 自己的网页 A 有个链接是打开另外一个三方地址 B
+- B 网页通过 `window.opener` 获取到 A 网页的 `window` 对象， 进而可以使得 A 页面跳转到一个钓鱼页面 `window.opener.location.href ="abc.com"`， 用户没注意地址发生了跳转， 在该页面输入了用户名密码后则发生信息泄露
+
+为了避免上述问题， 引入了 `rel="noopener"` 属性， 这样新打开的页面便获取不到来源页面的 `window` 对象了， 此时 `window.opener` 的值是 `null`
+
+所以， 如果要在新标签页中打开三方地址时， 最好配全着 `rel="noopener"`
+
+#### `noreferrer`
+
+与 `noopener` 类似， 设置了 `rel="noreferrer"` 后新开页面也无法获取来源页面的 `window` 以进行攻击， 同时， 新开页面中还无法获取 `document.referrer` 信息， 该信息包含了来源页面的地址
+
+通常 `noopener` 和 `noreferrer` 会同时设置， `rel="noopener noreferrer"`
+
+同时设置两者是考虑到兼容性， 一些老旧浏览器不支持 `noopener`
+
+#### `nofollow`
+
+搜索引擎对页面的权重计算中包含一项页面引用数 (backlinks), 即如果页面被其他地方链接得多， 那本页面会被搜索引擎判定为优质页面， 在搜索结果中排名会上升。
+
+当设置 `rel="nofollow"` 则表示告诉搜索引擎， 本次链接不为上述排名作贡献。
+
+一般用于链接内部地址， 或一些不太优质的页面
+
+
+
+### 15 修改页面中head得title
+
+![image-20230605173154164](REACT_LEARNING.assets/image-20230605173154164.png)
+
+之前有个react-meta-tag库，但只支持到react16，其实还有个react-helmet，可以支持meta和title的修改
+
+可以先定义个组件
+
+![image-20230605173651532](REACT_LEARNING.assets/image-20230605173651532.png)
+
+然后在需要使用到的页面中引入，meta和title就会被引入到head里了
+
+![image-20230605173726422](REACT_LEARNING.assets/image-20230605173726422.png)
+
+其余页面如果要修改也是这样的方法
+
+不过还挺奇怪的，不知道为啥ahooks的useTitle不起效果
+
+
+
+
+
 # SEO优化
 
 🌟 把代码中涉及到页面跳转的onclick全都换成a标签
@@ -2675,13 +2753,62 @@ import zhCN from 'antd/lib/locale-provider/zh_CN';
 
 # 那就偷学点儿🤫：
 
-轮询
+### 01 轮询
 
-应用场景……
+- **Polling**<轮询>：
 
+不管服务端数据有无更新，客户端每隔定长时间请求拉取一次数据，可能有更新数据返回，也可能什么都没有
 
+-  **Long Polling**<长轮询>：
 
+客户端发起Long Polling，此时如果服务端没有相关数据，会hold住请求，直到服务端有相关数据，或者等待一定时间超时才会返回。返回后，客户端又会立即再次发起下一次Long Polling。（所谓的hold住请求指的服务端暂时不回复结果，保存相关请求，不关闭请求连接，等相关数据准备好，写会客户端。）
 
+### 短轮询
+
+**定义**：其实就是普通的轮询。指在特定的的时间间隔（如每1秒），由浏览器对服务器发出HTTP request，然后由服务器返回最新的数据给客户端的浏览器
+
+**应用场景**：传统的web通信模式。后台处理数据，需要一定时间，前端想要知道后端的处理结果，就要不定时的向后端发出请求以获得最新情况
+
+**优点**：前后端程序编写比较容易
+
+**缺点**：请求中有大半是无用，难于维护，浪费带宽和服务器资源；响应的结果没有顺序（因为是异步请求，当发送的请求没有返回结果的时候，后面的请求又被发送。而此时如果后面的请求比前面的请 求要先返回结果，那么当前面的请求返回结果数据时已经是过时无效的数据了）
+ 实例：适于小型应用
+
+**前端实现：**
+
+```jsx
+var xhr = new XMLHttpRequest();    
+  setInterval(function(){        
+    xhr.open('GET','/user');        
+    xhr.onreadystatechange = function(){  
+      ajax()    
+     };       
+    xhr.send();    
+  },1000)
+```
+
+### 长轮询
+
+**定义**：客户端向服务器发送Ajax请求，服务器接到请求后hold住连接，直到有新消息才返回响应信息并关闭连接，客户端处理完响应信息后再向服务器发送新的请求
+
+**优点**：在无消息的情况下不会频繁的请求，耗费资源小
+
+**缺点**：服务器hold连接会消耗资源，返回数据顺序无保证，难于管理维护
+
+**实例**：WebQQ、Hi网页版、Facebook IM
+
+**前端实现：**
+
+```jsx
+function ajax(){        
+   var xhr = new XMLHttpRequest();
+   xhr.open('GET','/user');        
+   xhr.onreadystatechange = function(){              
+   ajax();        
+   };        
+   xhr.send();    
+}
+```
 
 
 
