@@ -2547,6 +2547,32 @@ replaceFn的大致逻辑就是根据标签内的属性去区别元素的种类�
 
 
 
+### 16 为head添加Canonical标签
+
+- 是啥？
+
+👉 网址规范化一直是困扰站长以及搜索引擎的一个问题。据估计，网上有10%-30%的URL是内容相同但URL不一样的不规范化网址 😮
+
+- 咋用？
+
+👉 简单说，就是在HTML文件的头部加上这样一段代码：
+
+```react
+<link rel=”canonical” href=”http://www.example.com/product.php?item=swedish-fish” />
+```
+
+意义就是这个网页的规范化网址应该是：
+
+`http://www.example.com/product.php?item=swedish-fish`
+
+其他不规范网址都可以加上这段代码，说明真正规范化的网址是它
+
+- so？
+
+👉  这个标签相当是一个页面内的301转向。区别在于用户并不被转向，还是停留在不变网址上，而搜索引擎会把它当作是301转向处理，也就是说把页面链接的权重都集中到代码中指明的规范化网址上
+
+
+
 
 
 # SEO优化
@@ -2576,11 +2602,15 @@ replaceFn的大致逻辑就是根据标签内的属性去区别元素的种类�
 
 # 数据打点（埋点）
 
-发现了项目中总有这些奇怪的 `_daTrackEvent` 事件
+发现了项目（Vue项目）中总有这些奇怪的 `_daTrackEvent` 事件
 
 ![image-20230520170333040](REACT_LEARNING.assets/image-20230520170333040.png)
 
 然后就看到了更奇怪的一个文件，其实有点感觉，就是记录用户做了啥操作
+
+是有文档的，da特指为为某个网站添加打点服务，即通过 da.js 提供的数据打点功能将用户的交互行为记录并发送给数据服务器
+
+只需要先建个da.shim.js的文件，把这些打点的逻辑做个定义，在main.js中引入，就可以在全局直接使用 `_daTrackEvent（）` 来进行调用了，传入相对应的参数，
 
 ![image-20230520170611927](REACT_LEARNING.assets/image-20230520170611927.png)
 
@@ -2610,7 +2640,9 @@ replaceFn的大致逻辑就是根据标签内的属性去区别元素的种类�
 
   衡量了网站的用户行为目标达成情况，反映了网站的用户转化效果和营销策略的有效性
 
-  
+
+
+
 
 # 全局node版本切换：
 
@@ -2763,7 +2795,7 @@ import zhCN from 'antd/lib/locale-provider/zh_CN';
 
 客户端发起Long Polling，此时如果服务端没有相关数据，会hold住请求，直到服务端有相关数据，或者等待一定时间超时才会返回。返回后，客户端又会立即再次发起下一次Long Polling。（所谓的hold住请求指的服务端暂时不回复结果，保存相关请求，不关闭请求连接，等相关数据准备好，写会客户端。）
 
-### 短轮询
+#### 短轮询
 
 **定义**：其实就是普通的轮询。指在特定的的时间间隔（如每1秒），由浏览器对服务器发出HTTP request，然后由服务器返回最新的数据给客户端的浏览器
 
@@ -2787,7 +2819,7 @@ var xhr = new XMLHttpRequest();
   },1000)
 ```
 
-### 长轮询
+#### 长轮询
 
 **定义**：客户端向服务器发送Ajax请求，服务器接到请求后hold住连接，直到有新消息才返回响应信息并关闭连接，客户端处理完响应信息后再向服务器发送新的请求
 
@@ -2812,3 +2844,24 @@ function ajax(){
 
 
 
+### 02 更改chrome请求头的UA信息
+
+1、下载这个很酷的插件😎
+
+https://chrome.google.com/webstore/detail/user-agent-switcher-for-c/djflhoibgkdhkhhcedjiklpkjnoahfmg
+
+2、点击“选项“，添加百度pc爬虫和百度移动端爬虫
+
+![image-20230606225338937](REACT_LEARNING.assets/image-20230606225338937.png)
+
+[各种爬虫的New User-Agent String](https://cloud.tencent.com/developer/article/1887888)
+
+3、然后就能模拟百度爬虫去访问了，查看各种页面回显是否正确 ✅
+
+
+
+
+
+一个ssr项目写完了，算是一下子操手了四个react项目，不知道后天何去何从
+
+但是 react🐮🍺
