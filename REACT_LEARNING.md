@@ -2781,6 +2781,20 @@ import zhCN from 'antd/lib/locale-provider/zh_CN';
 
 
 
+### 09 `unable to resolve dependency tree`
+
+这个报错根本不用慌张
+
+这是因为node版本的问题
+
+全局切换下node版本就行了
+
+https://stackoverflow.com/questions/64573177/unable-to-resolve-dependency-tree-error-when-installing-npm-packages
+
+但不知道怎么看每个项目适配对node版本诶
+
+
+
 
 
 # 那就偷学点儿🤫：
@@ -2876,6 +2890,89 @@ UAT测完才可以上线
 
 
 
-react🐮🍺 江湖再见
+---
 
-转vue3去了
+
+
+没想到 我又回来了 继续更
+
+
+
+# 直播广场遇到的坑坑坑🕳️
+
+### 01 antd modal的样式穿透
+
+网上查的样式穿透，最好的方法就是外面包个自定义的类名，里面用global去改
+
+但是给Modal组件外包个div，再加个类是不生效的，而且div的地方还挺奇怪
+
+https://blog.csdn.net/weixin_45236604/article/details/123654864
+
+👉 应该利用`wrapClassName`这个api去加类名，就可以生效了
+
+```react
+<Modal
+  wrapClassName={styles.addAddressModal}
+  open={addAddressVisible}
+  onCancel={handleCancel}
+  footer={null}
+  destroyOnClose
+>
+  …………
+</Modal>
+```
+
+less这样写就行了
+
+![image-20230626001439970](REACT_LEARNING.assets/image-20230626001439970.png)
+
+
+
+### 02 Can't perform a React state update on an unmounted component
+
+是一个常见错误
+
+在使用异步调用时，造成了内存泄漏
+
+👉  **原因：组件卸载了，但是仍处于渲染数据状态（如：setState，useState），一般写定时器时候会有出现。其他情况也会，只要组件卸载但仍在更新数据时机**
+
+👉  解决：
+
+https://www.cnblogs.com/seemoon/p/12744957.html
+
+1⃣️ 定时器
+
+```react
+const [update, setUpdate] = useState(1);
+useEffect(() => {
+  const creatInt = setInterval(() => {
+    //假设这里写了定时器来更新update
+    setUpdate(c => c + 1);
+  }, 2000);
+  return () => {
+    clearInterval(creatInt);   //（重点）这里清除掉定时器  
+  };
+}, []);
+```
+
+2⃣️ useState
+
+```react
+useEffect(() => {
+  let isUnmount = false;      //这里插入isUnmount
+  const fetchDetail = async () => {
+    const res = await getDetail(detailId);
+    if (res.code === 0 && !isUnmount) {  //加上判断isUnmount才去更新数据渲染组件
+      setDetail(res.data);
+    }
+  };
+  fetchDetail();
+  return () => isUnmount = true;   //最好return一个isUnmount
+}, [detail]);
+```
+
+👉  实际解决场景：
+
+startCountDown 中有setTimeOut，使用第一种解决方法
+
+![image-20230626002347151](REACT_LEARNING.assets/image-20230626002347151.png)
