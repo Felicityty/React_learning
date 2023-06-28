@@ -2890,11 +2890,47 @@ UAT测完才可以上线
 
 
 
+### 04 CI/CD pipeline
+
+今天在代码提交之后，发现gitlab上会出现一个进度的圈圈，然后会变成✅，看了还莫名舒服的
+
+那看看是啥呗
+
+https://juejin.cn/post/7078304607998312462
+
+- **背景：**
+
+过去，我们开发发布软件通常需要比较长的一个周期。原因是我们需要非常多的人工流程来保障我们的软件质量。这些人工流程包括代码提交、合并、开发阶段测试、部署、内测、灰度发布、正式发布。所有的这些流程都会耗费大量人力，并且人工进行操作通常会引发因为操作不规范或粗心大意带来的许多问题
+
+- **CI 持续集成**
+
+要求我们的开发每天将自己的代码频繁的提交进代码仓库
+
+每次提交都会自动触发自动化测试、编译、生成结果的流程。当 CI 中自动化测试的任务出现了问题，会及时的自动通知到对应的开发人员，从而进行修复
+
+自动化测试覆盖率越高，越能提前发现问题
+
+- **CD 持续部署**
+
+要求我们的代码变更（包括 bug 修复、新功能等），及时的持续的第一时间发布到用户。我们应该保证我们的代码是随时可以发布的
+
+开发人员更多关注 CI 以保证提交的代码质量，运维运营人员更多关注 CD。 CI 的流程的结果是通过保证质量的代码提交进行待发布部署的代码产物的生成，CD 则关注于如何自动化的将这些代码生成产物部署到各个环境（开发环境、测试环境、生产环境）
+
+- **Gitlab pipeline**
+
+包含两个概念：Stage 和 Job
+
+Job 是定义具体做什么事情，通过编写 shell 脚本来实现具体要做什么事情。 Job 的运行需要 Gitlab Runner，runner 需要提供 Job 运行需要的环境，如 node、java等。 runner 可以是一台远端服务器，也可以是本地机器、也可以是虚拟机或者 docker
+
+Stage 是定义什么时候运行一个 Job
+
+通过 Stage 和 Job 的配合就可以完成 CI、CD 的流程定义。比如可以定义一个测试 Stage、一个编译 Stage、一个发布 Stage。这样我们提交了代码后就会自动化的在 Gitlab Runner 上面进行各个 Stage 的任务了，从而实现 CDCD
+
+
+
+
+
 ---
-
-
-
-没想到 我又回来了 继续更
 
 
 
@@ -2928,7 +2964,7 @@ less这样写就行了
 
 
 
-### 02 Can't perform a React state update on an unmounted component
+### 02 超常见错误 Can't perform a React state update on an unmounted component
 
 是一个常见错误
 
@@ -2976,3 +3012,229 @@ useEffect(() => {
 startCountDown 中有setTimeOut，使用第一种解决方法
 
 ![image-20230626002347151](REACT_LEARNING.assets/image-20230626002347151.png)
+
+
+
+### 03 antd报错 Instance created by `useForm` is not connect to any Form element. Forget to pass `form` prop?
+
+https://github.com/ant-design/ant-design/issues/21543
+
+form用的是useForm，在modal组件中加上`forceRender`就行了，奇奇怪怪的报错
+
+![image-20230627233202483](REACT_LEARNING.assets/image-20230627233202483.png)
+
+
+
+### 04 antd 再也不用`htmlType='submit'`了
+
+😱 出现问题：
+
+点击重新编辑按钮，切换成提交按钮，但是同时触发了提交的事件
+
+不知道是为啥诶
+
+```
+❌
+<Button className={styles.btn} htmlType='submit'>
+  提交
+</Button>
+
+✅
+{readOnly ? (
+  !isEnded && (
+    <Button className={styles.btn} onClick={toggleEdit}>
+      重新编辑
+    </Button>
+  )
+) : (
+  <Button className={styles.btn} htmlType='submit'>
+    提交
+  </Button>
+)}
+```
+
+![image-20230628002931870](REACT_LEARNING.assets/image-20230628002931870.png)
+
+form.submit() 会去调用Form组件中的onFinish函数
+
+![image-20230628002958754](REACT_LEARNING.assets/image-20230628002958754.png)
+
+
+
+### 05 子组件触发父组件的重新渲染 flag
+
+- 场景：
+
+  子组件改变想要触发父组件的重新渲染，利用setState
+
+👉  把父组件的handleRefresh传给子组件，合适的时机调用它即可
+
+```react
+// 父组件
+const [reloadFlag, setReloadFlag] = useState(false)
+
+const handleRefresh = () => {
+  setTimeout(() => {
+    setReloadFlag(reloadFlag => !reloadFlag)
+  }, 500)
+}
+```
+
+
+
+### 06 useEffect中括号里的很重要
+
+- 不加中括号：组件每次渲染都会执行一下
+
+- 加空的中括号：只会在组件首次渲染时执行一次，并且不会在后续重新渲染时再次执行
+
+- 加有内容的中括号：依赖项改变才会执行
+
+
+
+### 07 分析分析自定义hook - useRequest呗
+
+让我看到十点回家的东西🤯
+
+参数：service（请求数据函数），options
+
+options中的几个配置项
+
+- loadMore：是true就行
+- ref：可以是window，也可以只是一个div，用useRef就行
+- formatResult：定义返回的对象，这里在第一页这里做了判断是因为 如果没有数据就显示暂无数据
+- isNoMore：传一个判断是否更多的函数
+- refreshDeps：定义一个数组，存着数据刷新依赖的变量，当变量改变时，就重新请求数据
+
+这里的searchRequest很巧妙，是这样去请求下一页的数据，看useRequest的时候找了半天都没找出来为啥就加载下一页的数据了，其实是在外部传入的这个参数
+
+useRequest封装了两种情况，一种是我这里用到的上拉加载（上拉完后加载下一页也是在useLoadMore这个hook里写好的），还有一种是分页
+
+![image-20230629011147144](REACT_LEARNING.assets/image-20230629011147144.png)
+
+大致代码如下：
+
+```react
+const winRef = React.createRef()
+// @ts-ignore
+winRef.current = window
+
+const [reloadFlag, setReloadFlag] = useState(false)
+const handleRefresh = () => {
+  setTimeout(() => {
+    setReloadFlag(reloadFlag => !reloadFlag)
+  }, 500)
+}
+
+const searchRequest = async d =>
+  getLotteryList({
+    page: d ? d.current + 1 : 1,
+    size: 10,
+  })
+
+const firstSearchCallback = useCallback(
+  (res: any) => result => setNoResult(!result.data.length),
+  []
+)
+
+const { data, loading, loadingMore, noMore } = useRequest(searchRequest, {
+  loadMore: loadMore,
+  ref: winRef,
+  formatResult: (res: any) => {
+    const { success = false, page = {}, data = {} } = res || {}
+    const pageInfo = genListPage(page)
+    if (page.current === 1) firstSearchCallback(res)
+    return { ...pageInfo, list: success ? data : [] }
+  },
+  isNoMore: d => (d ? d.list.length >= d.total : false),
+  refreshDeps: [reloadFlag],
+})
+```
+
+但是吧，其实我发现ahooks这个库里也有useRequest的封装，也能判断上拉加载和分页这两种情况
+
+封装hook的人真的太强了吧🤔
+
+
+
+### 08 有await了就不用.then了，如果要用finally，试试用try
+
+- 问题代码：
+
+```react
+const getLotteryRecord = async params => {
+  setLoading(true)
+  await getLotteryList(params)
+    .then(res => {
+      const { success = false, page = {}, data = [] } = res || {}
+      if (success) {
+        setLotteryRecord(data)
+        const pageInfo = genListPage(page)
+        setPageInfo({
+          current: pageInfo.current,
+          pageSize: pageInfo.size,
+          total: pageInfo.total,
+        })
+      }
+    })
+    .finally(() => {
+      setLoading(false)
+    })
+}
+```
+
+- 修改后：
+
+```react
+const getLotteryRecord = async params => {
+  setLoading(true)
+  try {
+    const res = await getLotteryList(params)
+    const { success = false, page = {}, data = [] } = res || {}
+    if (success) {
+      setLotteryRecord(data)
+      const pageInfo = genListPage(page)
+      setPageInfo({
+        current: pageInfo.current,
+        pageSize: pageInfo.size,
+        total: pageInfo.total,
+      })
+    }
+  } catch {
+  } finally {
+    setLoading(false)
+  }
+}
+```
+
+- 再来个对比的🌰吧：
+
+```react
+// 使用 .then()
+fetch('https://api.example.com/data')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  })
+  .catch(error => {
+    console.error(error);
+  });
+
+// 使用 await
+async function fetchData() {
+  try {
+    const response = await fetch('https://api.example.com/data');
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+```
+
+
+
+实习以来的第一个c端项目，还是react诶，还不是给爬虫写的，有js逻辑了，还不错～
+
+
+
