@@ -898,77 +898,63 @@ React Fragment 是 React 中的一个特性，它允许你对一组子元素进�
 
 - 数组
 
-![image-20230503204155203](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503204155203.png)
+![image-20230503204155203](REACT_LEARNING.assets/image-20230503204155203.png)
 
 - 对象
 
-![image-20230503204846541](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503204846541.png)
+![image-20230503204846541](REACT_LEARNING.assets/image-20230503204846541.png)
 
 - 函数
 
-![image-20230503205351175](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503205351175.png)
+![image-20230503205351175](REACT_LEARNING.assets/image-20230503205351175.png)
 
-![image-20230503205534288](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503205534288.png)
+![image-20230503205534288](REACT_LEARNING.assets/image-20230503205534288.png)
 
 - 对象，函数作为属性
 
-![image-20230503205719758](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503205719758.png)
+![image-20230503205719758](REACT_LEARNING.assets/image-20230503205719758.png)
 
 - 类
 
-![image-20230503210419606](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503210419606.png)
+![image-20230503210419606](REACT_LEARNING.assets/image-20230503210419606.png)
 
-![image-20230503210602156](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503210602156.png)
+![image-20230503210602156](REACT_LEARNING.assets/image-20230503210602156.png)
 
 - 类+接口
 
-![image-20230503210955900](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503210955900.png)
+![image-20230503210955900](REACT_LEARNING.assets/image-20230503210955900.png)
 
-![image-20230503211018450](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503211018450.png)
+![image-20230503211018450](REACT_LEARNING.assets/image-20230503211018450.png)
 
-![image-20230503211038538](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503211038538.png)
+![image-20230503211038538](REACT_LEARNING.assets/image-20230503211038538.png)
 
 - 函数式组件
 
-![image-20230503211734835](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503211734835.png)
+![image-20230503211734835](REACT_LEARNING.assets/image-20230503211734835.png)
 
 - todo
 
-![image-20230503212030541](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503212030541.png)
+![image-20230503212030541](REACT_LEARNING.assets/image-20230503212030541.png)
 
-![image-20230503212120917](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503212120917.png)
+![image-20230503212305433](REACT_LEARNING.assets/image-20230503212120917.png)
 
 -  props
 
-![image-20230503212305433](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503212305433.png)
-
-![image-20230503212353375](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503212353375.png)
+![image-20230503212353375](REACT_LEARNING.assets/image-20230503212353375.png)
 
 或者
 
-![image-20230503212533708](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503212533708.png)
+![image-20230503212533708](REACT_LEARNING.assets/image-20230503212533708.png)
 
 - 点击控制显隐
 
-![image-20230503213300553](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503213300553.png)
+![image-20230503213300553](REACT_LEARNING.assets/image-20230503213300553.png)
 
-![image-20230503213214808](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503213214808.png)
+![image-20230503213214808](REACT_LEARNING.assets/image-20230503213214808.png)
 
-![image-20230503213402935](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503213402935.png)
+![image-20230503213402935](REACT_LEARNING.assets/image-20230503213402935.png)
 
-![image-20230503213429467](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230503213429467.png)
-
-
-
-
-
-
-
-
-
-
-
-
+![image-20230503213429467](REACT_LEARNING.assets/image-20230503213429467.png)
 
 
 
@@ -1954,11 +1940,11 @@ function useTuple() {
 
 ### 01 使用context，value一直报错
 
-![image-20230511222855344](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230511222855344.png)
+![image-20230511222855344](REACT_LEARNING.assets/image-20230511222855344.png)
 
 虽然知道是类型的错误，但想了半天也没出来是哪里的问题
 
-![image-20230511223024351](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230511223024351.png)
+![image-20230511223024351](REACT_LEARNING.assets/image-20230511223024351.png)
 
 是在createContext的时候设定默认值的类型不对，改成一样的就好啦
 
@@ -1966,7 +1952,7 @@ function useTuple() {
 
 ### 02 useEffect疯狂报错 但是不需要添加这个依赖
 
-![image-20230512134753799](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512134753799.png)
+![image-20230512134753799](REACT_LEARNING.assets/image-20230512134753799.png)
 
 ` // eslint-disable-next-line react-hooks/exhaustive-deps `
 
@@ -1980,13 +1966,13 @@ function useTuple() {
 
 ### 03 props-type报错
 
-![image-20230512140236236](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140236236.png)
+![image-20230512140236236](REACT_LEARNING.assets/image-20230512140236236.png)
 
-![image-20230512140255527](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140255527.png)
+![image-20230512140255527](REACT_LEARNING.assets/image-20230512140255527.png)
 
 很奇怪，明明用了FromProps定义了，但用结构赋值就是显示缺失规则
 
-![image-20230512140551852](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140551852.png)
+![image-20230512140551852](REACT_LEARNING.assets/image-20230512140551852.png)
 
 那就只能把prop-types规则禁用掉了
 
@@ -1994,9 +1980,9 @@ function useTuple() {
 
 04 
 
-![image-20230512140855548](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140855548.png)
+![image-20230512140855548](REACT_LEARNING.assets/image-20230512140855548.png)
 
-![image-20230512140918048](/Users/dxy/Desktop/FTT/learning/React_learning/REACT_LEARNING.assets/image-20230512140918048.png)
+![image-20230512140918048](REACT_LEARNING.assets/image-20230512140918048.png)
 
 同样增加规则
 
@@ -2478,7 +2464,7 @@ replaceFn的大致逻辑就是根据标签内的属性去区别元素的种类�
 
 ![image-20230604010222852](REACT_LEARNING.assets/image-20230604010222852.png)
 
-虽然不大明白为啥后端为啥要这样返回，但总之还是有点绝的
+诶，不就是为了不去渲染原生标签，而是去渲染自定义组件嘛
 
 
 
@@ -3234,7 +3220,23 @@ async function fetchData() {
 
 
 
-实习以来的第一个c端项目，还是react诶，还不是给爬虫写的，有js逻辑了，还不错～
+### 09 引入dev/mock页面
+
+👉 为啥需要这个页面：
+
+这个页面时纯纯为前端开发时用的，它主要的功能是可以切换三种请求的方式，请求真实接口地址，请求本地的mock数据，和请求后端提供的mock数据
+
+同时，它可以去配置一些本地模拟数据，比如根据请求真实接口地址获取的数据，来创建相应的本地模拟数据文件；在访问本地模拟数据的时候发现本地缺少相应的文件，就可以去创建相应的本地空文件
+
+umi框架实际上是在webpack外面重新套了一层
+
+这一切的实现呢，都依靠公司有的一个mockServer包，这个包其实是用express重起了一个服务，当我们的请求地址中带有mock，请求就会走这个包起的服务
+
+一般项目中就是把它写到webpack配置文件的devServer里去，利用一个钩子，对代理服务器的响应进行修改，如果是有mock，返回的就是那个包起的服务的返回数据
+
+但是umi这里，它实际是在webpack外面再包了一层的，配置这边提供的devserver的配置项参数只有固定四个，所以没办法用，得换一种方式，最后利用了一下umi的一个很核心的插件机制，在这个插件里去写那个包所需要的重起服务的逻辑，在那边配置的devserver的参数就不局限于那四个了，就可以去利用那个包来重起一个服务了
+
+![img](https://cdn.nlark.com/yuque/0/2023/png/35423983/1688555873065-0f104aab-7c82-4299-93dc-ef0b5f817a89.png)
 
 
 
