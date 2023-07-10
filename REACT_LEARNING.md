@@ -3222,21 +3222,82 @@ async function fetchData() {
 
 ### 09 引入dev/mock页面
 
-👉 为啥需要这个页面：
+👉 需求：
 
 这个页面时纯纯为前端开发时用的，它主要的功能是可以切换三种请求的方式，请求真实接口地址，请求本地的mock数据，和请求后端提供的mock数据
 
 同时，它可以去配置一些本地模拟数据，比如根据请求真实接口地址获取的数据，来创建相应的本地模拟数据文件；在访问本地模拟数据的时候发现本地缺少相应的文件，就可以去创建相应的本地空文件
 
+👉 实现：
+
 umi框架实际上是在webpack外面重新套了一层
 
 这一切的实现呢，都依靠公司有的一个mockServer包，这个包其实是用express重起了一个服务，当我们的请求地址中带有mock，请求就会走这个包起的服务
+
+👉 难点：
 
 一般项目中就是把它写到webpack配置文件的devServer里去，利用一个钩子，对代理服务器的响应进行修改，如果是有mock，返回的就是那个包起的服务的返回数据
 
 但是umi这里，它实际是在webpack外面再包了一层的，配置这边提供的devserver的配置项参数只有固定四个，所以没办法用，得换一种方式，最后利用了一下umi的一个很核心的插件机制，在这个插件里去写那个包所需要的重起服务的逻辑，在那边配置的devserver的参数就不局限于那四个了，就可以去利用那个包来重起一个服务了
 
+```tsx
+export default {
+  base: '/',
+  proxy: getProxy(),
+  define: {
+    'process.env.RUN_ENV': 'local',
+  },
+  publicPath: '/',
+  plugins: [path.resolve(__dirname, './localMockPlugin.js')],
+}
+
+```
+
+```tsx
+const devMockServer = require('@dxy/dev-mock-server')
+
+export default function(api) {
+  /**
+   * 当发生主服务意外退出，导致该服务没有退出时，请手动关闭
+   * 查看 PID 指令：lsof -i:23071
+   * 根据 PID 关闭进程：kill -s 9 {pid}
+   */
+  devMockServer.init({
+    prefix: '/mock/',
+    port: 23071,
+    config: {
+      enableReadLocalMock: true,
+      writeMockFileOnLoadFail: false,
+      writeMockFileOnProxy: true,
+      overwriteMockFiles: false,
+    },
+  })
+}
+```
+
 ![img](https://cdn.nlark.com/yuque/0/2023/png/35423983/1688555873065-0f104aab-7c82-4299-93dc-ef0b5f817a89.png)
 
+👉 补充 写入全局cookie：
 
+发现了个bug，在dev/mock页面写好的cookie，url改了之后居然在新页面消失了
+
+之前使用 `document.cookie = ${this.key}=${val}` 写入的，path会默认为/dev
+
+这就必须得引入个新的库了——react-cookies
+
+`cookie.save(this.key, val, { path: "/" })`
+
+
+
+
+
+# 直播c端遇到的坑坑坑🕳️
+
+### 01 vuex的getters默认是全局的
+
+拿state是要带上module名的
+
+拿getters不手动开启namespace的话，是全局的（所以这里的命名可以详细一些）
+
+可以尽量用mapGetters和mapState，使用更简单
 
