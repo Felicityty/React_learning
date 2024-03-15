@@ -335,6 +335,389 @@ render里做的事情：
 
 
 
+## 07 - props
+
+❗️ 只读不能改
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Person extends React.Component{
+		render(){
+			// console.log(this);
+			const {name,age,sex} = this.props
+			return (
+				<ul>
+					<li>姓名：{name}</li>
+					<li>性别：{sex}</li>
+					<li>年龄：{age+1}</li>
+				</ul>
+			)
+		}
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Person name="jerry" age={19}  sex="男"/>,document.getElementById('test1'))
+	ReactDOM.render(<Person name="tom" age={18} sex="女"/>,document.getElementById('test2'))
+
+	const p = {name:'老刘',age:18,sex:'女'}
+	// console.log('@',...p);
+	// ReactDOM.render(<Person name={p.name} age={p.age} sex={p.sex}/>,document.getElementById('test3'))
+	ReactDOM.render(<Person {...p}/>,document.getElementById('test3'))
+</script>
+```
+
+👉 这里的 {...p} 不是js中 p2={...p} 复制对象的意思(这是一个新语法)，而是babel+react的情况下，{}代表里面可以放js表达式，并且可以做对象展开，仅在标签属性下可以】
+ps：如果只是js的话，{...p}是会报错的(展开运算符不能展开对象)
+
+👉 给prop加上{}就可以传递数字了
+
+
+
+引入 - 新增
+
+![image-20240315154548165](restart.assets/image-20240315154548165.png)
+
+**对props增加限制：**
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Person extends React.Component{
+		render(){
+			// console.log(this);
+			const {name,age,sex} = this.props
+			//props是只读的
+			//this.props.name = 'jack' //此行代码会报错，因为props是只读的
+			return (
+				<ul>
+					<li>姓名：{name}</li>
+					<li>性别：{sex}</li>
+					<li>年龄：{age+1}</li>
+				</ul>
+			)
+		}
+	}
+	//对标签属性进行类型、必要性的限制
+	Person.propTypes = {
+		name:PropTypes.string.isRequired, //限制name必传，且为字符串
+		sex:PropTypes.string,//限制sex为字符串
+		age:PropTypes.number,//限制age为数值
+		speak:PropTypes.func,//限制speak为函数
+	}
+	//指定默认标签属性值
+	Person.defaultProps = {
+		sex:'男',//sex默认值为男
+		age:18 //age默认值为18
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Person name={100} speak={speak}/>,document.getElementById('test1'))
+	ReactDOM.render(<Person name="tom" age={18} sex="女"/>,document.getElementById('test2'))
+
+	const p = {name:'老刘',age:18,sex:'女'}
+	// console.log('@',...p);
+	// ReactDOM.render(<Person name={p.name} age={p.age} sex={p.sex}/>,document.getElementById('test3'))
+	ReactDOM.render(<Person {...p}/>,document.getElementById('test3'))
+
+	function speak(){
+		console.log('我说话了');
+	}
+</script>
+```
+
+
+
+加上 `static`，属性就不加给类的实例对象，而是加给类本身了
+
+👉 简写：
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Person extends React.Component{
+
+		constructor(props){
+			//构造器是否接收props，是否传递给super，取决于：是否希望在构造器中通过this访问props
+			// console.log(props);
+			super(props)
+			console.log('constructor',this.props);
+		}
+
+		//✅ 对标签属性进行类型、必要性的限制
+		static propTypes = {
+			name:PropTypes.string.isRequired, //限制name必传，且为字符串
+			sex:PropTypes.string,//限制sex为字符串
+			age:PropTypes.number,//限制age为数值
+		}
+
+		//✅ 指定默认标签属性值
+		static defaultProps = {
+			sex:'男',//sex默认值为男
+			age:18 //age默认值为18
+		}
+		
+		render(){
+			// console.log(this);
+			const {name,age,sex} = this.props
+			//props是只读的
+			//this.props.name = 'jack' //此行代码会报错，因为props是只读的
+			return (
+				<ul>
+					<li>姓名：{name}</li>
+					<li>性别：{sex}</li>
+					<li>年龄：{age+1}</li>
+				</ul>
+			)
+		}
+	}
+
+	//渲染组件到页面
+	ReactDOM.render(<Person name="jerry"/>,document.getElementById('test1'))
+</script>
+```
+
+
+
+🙆‍♂️ 总结一下：
+
+<img src="restart.assets/image-20240315163046498.png" alt="image-20240315163046498" style="zoom:40%;" />
+
+1、constructor构造函数可以不传，上图中仅用于的两种情况都可以用其余方式解决
+
+- 直接给state赋值
+- 赋值语句+箭头函数
+
+2、写了constructor构造函数必须里面加上super，并且super中写上props，否则会出现图中的问题
+
+👉 **构造器是否接收props，是否传递给super，取决于：是否希望在构造器中通过this访问props**，这种情况几乎没有，所以开发中都不写
+
+
+
+**函数式组件使用props：**
+
+```js
+<script type="text/babel">
+	//创建组件
+	function Person (props){
+		const {name,age,sex} = props
+		return (
+				<ul>
+					<li>姓名：{name}</li>
+					<li>性别：{sex}</li>
+					<li>年龄：{age}</li>
+				</ul>
+			)
+	}
+	Person.propTypes = {
+		name:PropTypes.string.isRequired, //限制name必传，且为字符串
+		sex:PropTypes.string,//限制sex为字符串
+		age:PropTypes.number,//限制age为数值
+	}
+	//指定默认标签属性值
+	Person.defaultProps = {
+		sex:'男',//sex默认值为男
+		age:18 //age默认值为18
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Person name="jerry"/>,document.getElementById('test1'))
+</script>
+```
+
+
+
+## 08 - refs
+
+### 1 字符串（不推荐）
+
+官方不推荐，效率不高，但确实方便，16.x的都还在用
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Demo extends React.Component{
+		//展示左侧输入框的数据
+		showData = ()=>{
+			const {input1} = this.refs
+			alert(input1.value)
+		}
+		//展示右侧输入框的数据
+		showData2 = ()=>{
+			const {input2} = this.refs
+			alert(input2.value)
+		}
+		render(){
+			return(
+				<div>
+					<input ref="input1" type="text" placeholder="点击按钮提示数据"/>&nbsp;
+					<button onClick={this.showData}>点我提示左侧的数据</button>&nbsp;
+					<input ref="input2" onBlur={this.showData2} type="text" placeholder="失去焦点提示数据"/>
+				</div>
+			)
+		}
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Demo a="1" b="2"/>,document.getElementById('test'))
+</script>
+```
+
+### 2 回调函数（用内联）
+
+回调函数直白来说：
+
+- 你定义的函数
+- 你没调用
+- 这个函数最终执行了
+
+取名ref后，react会帮你调用的，还把ref当前所处节点传进去了
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Demo extends React.Component{
+		//展示左侧输入框的数据
+		showData = ()=>{
+			const {input1} = this
+			alert(input1.value)
+		}
+		//展示右侧输入框的数据
+		showData2 = ()=>{
+			const {input2} = this
+			alert(input2.value)
+		}
+		render(){
+			return(
+				<div>
+					// 拿到节点c(currentNode)，把这个节点放在了组件实例对象自身上，并取名input1
+					<input ref={c => this.input1 = c } type="text" placeholder="点击按钮提示数据"/>&nbsp;
+					<button onClick={this.showData}>点我提示左侧的数据</button>&nbsp;
+					<input onBlur={this.showData2} ref={c => this.input2 = c } type="text" placeholder="失去焦点提示数据"/>&nbsp;
+				</div>
+			)
+		}
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Demo a="1" b="2"/>,document.getElementById('test'))
+</script>
+```
+
+👉 关于回调ref中回调执行次数的问题：
+
+<img src="restart.assets/image-20240315190617408.png" alt="image-20240315190617408" style="zoom:45%;" />
+
+class绑定函数的意思是，给它拎出来个函数的感觉
+
+每次更新都会重新调一次render，发现你写了ref，ref中的回调函数是一个新的函数，所以需要先清空旧的（置为null），再去设置新的
+
+定义成**类绑定函数**方式 -> 它就知道每次渲染的函数是一样的了
+
+真是开发中直接写内联就行了，这种差别无关紧要
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Demo extends React.Component{
+
+		state = {isHot:false}
+
+		showInfo = ()=>{
+			const {input1} = this
+			alert(input1.value)
+		}
+
+		changeWeather = ()=>{
+			//获取原来的状态
+			const {isHot} = this.state
+			//更新状态
+			this.setState({isHot:!isHot})
+		}
+
+		saveInput = (c)=>{
+			this.input1 = c;
+			console.log('@',c);
+		}
+
+		render(){
+			const {isHot} = this.state
+			return(
+				<div>
+					<h2>今天天气很{isHot ? '炎热':'凉爽'}</h2>
+					{/* <input ref={(c)=>{this.input1 = c;console.log('@',c);}} type="text"/><br/><br/> */}
+					<input ref={this.saveInput} type="text"/><br/><br/>
+					<button onClick={this.showInfo}>点我提示输入的数据</button>
+					<button onClick={this.changeWeather}>点我切换天气</button>
+				</div>
+			)
+		}
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Demo/>,document.getElementById('test'))
+</script>
+```
+
+
+
+### 3 createRef（最推荐）
+
+myRef 是通过createRef创建出来的一个容器，会把ref所在的节点放到容器里
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Demo extends React.Component{
+		/* 
+			React.createRef调用后可以返回一个容器，该容器可以存储被ref所标识的节点,该容器是“专人专用”的
+			*/
+		myRef = React.createRef()
+		myRef2 = React.createRef()
+		//展示左侧输入框的数据
+		showData = ()=>{
+			alert(this.myRef.current.value);
+		}
+		//展示右侧输入框的数据
+		showData2 = ()=>{
+			alert(this.myRef2.current.value);
+		}
+		render(){
+			return(
+				<div>
+					{/* myRef 是通过createRef创建出来的一个容器，会把ref所在的节点放到容器里 */}
+					<input ref={this.myRef} type="text" placeholder="点击按钮提示数据"/>&nbsp;
+					<button onClick={this.showData}>点我提示左侧的数据</button>&nbsp;
+					<input onBlur={this.showData2} ref={this.myRef2} type="text" placeholder="失去焦点提示数据"/>&nbsp;
+				</div>
+			)
+		}
+	}
+	//渲染组件到页面
+	ReactDOM.render(<Demo a="1" b="2"/>,document.getElementById('test'))
+</script>
+```
+
+
+
+## 09 - 事件处理
+
+(1).通过onXxx属性指定事件处理函数(注意大小写)
+
+​    a.React使用的是自定义(合成)事件, 而不是使用的原生DOM事件 ————————为了更好的兼容性
+
+​    b.React中的事件是通过事件委托方式处理的(委托给组件最外层的元素) ————————为了的高效
+
+(2).通过event.target得到发生事件的DOM元素对象 ————————不要过度使用ref【发生事件的元素正好是要操作的元素，就可以省略ref，用event.target拿】
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
