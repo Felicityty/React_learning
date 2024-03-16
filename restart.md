@@ -706,13 +706,310 @@ myRef 是通过createRef创建出来的一个容器，会把ref所在的节点�
 
 
 
+## 10 - 受控？
+
+非受控：现用现取
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Login extends React.Component{
+		handleSubmit = (event)=>{
+			event.preventDefault() //阻止表单提交
+			const {username,password} = this
+			alert(`你输入的用户名是：${username.value},你输入的密码是：${password.value}`)
+		}
+		render(){
+			return(
+				<form onSubmit={this.handleSubmit}>
+					用户名：<input ref={c => this.username = c} type="text" name="username"/>
+					密码：<input ref={c => this.password = c} type="password" name="password"/>
+					<button>登录</button>
+				</form>
+			)
+		}
+	}
+	//渲染组件
+	ReactDOM.render(<Login/>,document.getElementById('test'))
+</script>
+```
+
+受控：随着输入维护状态，有点像vue的双向数据绑定（v-model就是v-bind + @change的语法糖）【推荐（省略ref）】
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Login extends React.Component{
+
+		//初始化状态
+		state = {
+			username:'', //用户名
+			password:'' //密码
+		}
+
+		//保存用户名到状态中
+		saveUsername = (event)=>{
+			this.setState({username:event.target.value})
+		}
+
+		//保存密码到状态中
+		savePassword = (event)=>{
+			this.setState({password:event.target.value})
+		}
+
+		//表单提交的回调
+		handleSubmit = (event)=>{
+			event.preventDefault() //阻止表单提交
+			const {username,password} = this.state
+			alert(`你输入的用户名是：${username},你输入的密码是：${password}`)
+		}
+
+		render(){
+			return(
+				<form onSubmit={this.handleSubmit}>
+					用户名：<input onChange={this.saveUsername} type="text" name="username"/>
+					密码：<input onChange={this.savePassword} type="password" name="password"/>
+					<button>登录</button>
+				</form>
+			)
+		}
+	}
+	//渲染组件
+	ReactDOM.render(<Login/>,document.getElementById('test'))
+</script>
+```
 
 
 
+## 12 - 高阶函数 柯里化
+
+**高阶函数：**如果一个函数符合下面2个规范中的任何一个，那该函数就是高阶函数。
+
+​        1.若A函数，接收的参数是一个函数，那么A就可以称之为高阶函数。
+
+​        2.若A函数，调用的返回值依然是一个函数，那么A就可以称之为高阶函数。
+
+​        常见的高阶函数有：Promise、setTimeout、arr.map()等等
+
+**函数的柯里化：**通过函数调用继续返回函数的方式，实现多次接收参数最后统一处理的函数编码形式。 
+
+```js
+function sum(a){
+	return(b)=>{
+		return (c)=>{
+			return a+b+c
+		}
+	}
+}
+```
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Login extends React.Component{
+		//初始化状态
+		state = {
+			username:'', //用户名
+			password:'' //密码
+		}
+
+		//保存表单数据到状态中
+		saveFormData = (dataType)=>{
+			return (event)=>{
+				this.setState({[dataType]:event.target.value})
+			}
+		}
+
+		//表单提交的回调
+		handleSubmit = (event)=>{
+			event.preventDefault() //阻止表单提交
+			const {username,password} = this.state
+			alert(`你输入的用户名是：${username},你输入的密码是：${password}`)
+		}
+		render(){
+			return(
+				<form onSubmit={this.handleSubmit}>
+					用户名：<input onChange={this.saveFormData('username')} type="text" name="username"/>
+					密码：<input onChange={this.saveFormData('password')} type="password" name="password"/>
+					<button>登录</button>
+				</form>
+			)
+		}
+	}
+	//渲染组件
+	ReactDOM.render(<Login/>,document.getElementById('test'))
+</script>
+```
+
+这里的saveFormData函数实际上就是高阶函数，并运用了柯里化
+
+`用户名：<input onChange={event => this.saveFormData('username',event) } type="text" name="username"/>` 变成这种也ok，不用柯里化和高阶函数，以前我都这么写的诶
 
 
 
+## 13 - 生命周期
 
+### 1 引入
+
+<img src="restart.assets/image-20240316225326427.png" alt="image-20240316225326427" style="zoom: 50%;" />
+
+这个警告还真挺常见的，之前遇到好像就没管诶😂
+
+不能再已被卸载的组件上执行状态的更新 👉 在组件要被卸载之前的生命周期函数中，销毁掉定时器
+
+生命周期回调函数 <=> 生命周期钩子函数 <=> 生命周期函数 <=> 生命周期钩子
+
+### 2 旧
+
+![image-20240316235439669](restart.assets/image-20240316235439669.png)
+
+```js
+<script type="text/babel">
+	/* 
+			1. 初始化阶段: 由ReactDOM.render()触发---初次渲染
+								1.	constructor()
+								2.	componentWillMount()
+								3.	render()
+								4.	componentDidMount() =====> 常用
+												一般在这个钩子中做一些初始化的事，例如：开启定时器、发送网络请求、订阅消息
+			2. 更新阶段: 由组件内部this.setSate()或父组件render触发
+								1.	shouldComponentUpdate()
+								2.	componentWillUpdate()
+								3.	render() =====> 必须使用的一个
+								4.	componentDidUpdate()
+			3. 卸载组件: 由ReactDOM.unmountComponentAtNode()触发
+								1.	componentWillUnmount()  =====> 常用
+												一般在这个钩子中做一些收尾的事，例如：关闭定时器、取消订阅消息
+	*/
+	//创建组件
+	class Count extends React.Component{
+
+		//构造器
+		constructor(props){
+			console.log('Count---constructor');
+			super(props)
+			//初始化状态
+			this.state = {count:0}
+		}
+
+		//加1按钮的回调
+		add = ()=>{
+			//获取原状态
+			const {count} = this.state
+			//更新状态
+			this.setState({count:count+1})
+		}
+
+		//卸载组件按钮的回调
+		death = ()=>{
+			ReactDOM.unmountComponentAtNode(document.getElementById('test'))
+		}
+
+		//强制更新按钮的回调
+		force = ()=>{
+			this.forceUpdate()
+		}
+
+		//组件将要挂载的钩子
+		componentWillMount(){
+			console.log('Count---componentWillMount');
+		}
+
+		//组件挂载完毕的钩子
+		componentDidMount(){
+			console.log('Count---componentDidMount');
+		}
+
+		//组件将要卸载的钩子
+		componentWillUnmount(){
+			console.log('Count---componentWillUnmount');
+		}
+
+		//控制组件更新的“阀门”
+		shouldComponentUpdate(){
+			console.log('Count---shouldComponentUpdate');
+			return true
+		}
+
+		//组件将要更新的钩子
+		componentWillUpdate(){
+			console.log('Count---componentWillUpdate');
+		}
+
+		//组件更新完毕的钩子
+		componentDidUpdate(){
+			console.log('Count---componentDidUpdate');
+		}
+
+		render(){
+			console.log('Count---render');
+			const {count} = this.state
+			return(
+				<div>
+					<h2>当前求和为：{count}</h2>
+					<button onClick={this.add}>点我+1</button>
+					<button onClick={this.death}>卸载组件</button>
+					<button onClick={this.force}>不更改任何状态中的数据，强制更新一下</button>
+				</div>
+			)
+		}
+	}
+	
+	//父组件A
+	class A extends React.Component{
+		//初始化状态
+		state = {carName:'奔驰'}
+
+		changeCar = ()=>{
+			this.setState({carName:'奥拓'})
+		}
+
+		render(){
+			return(
+				<div>
+					<div>我是A组件</div>
+					<button onClick={this.changeCar}>换车</button>
+					<B carName={this.state.carName}/>
+				</div>
+			)
+		}
+	}
+	
+	//子组件B
+	class B extends React.Component{
+		//组件将要接收新的props的钩子(第一次不算)
+		componentWillReceiveProps(props){
+			console.log('B---componentWillReceiveProps',props);
+		}
+
+		//控制组件更新的“阀门”
+		shouldComponentUpdate(){
+			console.log('B---shouldComponentUpdate');
+			return true
+		}
+		//组件将要更新的钩子
+		componentWillUpdate(){
+			console.log('B---componentWillUpdate');
+		}
+
+		//组件更新完毕的钩子
+		componentDidUpdate(){
+			console.log('B---componentDidUpdate');
+		}
+
+		render(){
+			console.log('B---render');
+			return(
+				<div>我是B组件，接收到的车是:{this.props.carName}</div>
+			)
+		}
+	}
+	
+	//渲染组件
+	ReactDOM.render(<Count/>,document.getElementById('test'))
+	ReactDOM.render(<A/>,document.getElementById('test'))
+</script>
+```
 
 
 
