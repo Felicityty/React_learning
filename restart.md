@@ -1011,7 +1011,167 @@ function sum(a){
 </script>
 ```
 
+### 3 新
 
+所有带will的钩子都需要加上UNSAFE_，除了componentWIllUnmount
+
+**新旧对比：**废弃了3个，新增了两个（用的场景也极为罕见）
+
+![image-20240317003411757](restart.assets/image-20240317003411757.png)
+
+```js
+<script type="text/babel">
+	//创建组件
+	class Count extends React.Component{
+		/* 
+			1. 初始化阶段: 由ReactDOM.render()触发---初次渲染
+							1.	constructor()
+							2.	getDerivedStateFromProps 
+							3.	render()
+							4.	componentDidMount() =====> 常用
+										一般在这个钩子中做一些初始化的事，例如：开启定时器、发送网络请求、订阅消息
+			2. 更新阶段: 由组件内部this.setSate()或父组件重新render触发
+							1.	getDerivedStateFromProps
+							2.	shouldComponentUpdate()
+							3.	render()
+							4.	getSnapshotBeforeUpdate
+							5.	componentDidUpdate()
+			3. 卸载组件: 由ReactDOM.unmountComponentAtNode()触发
+							1.	componentWillUnmount()  =====> 常用
+										一般在这个钩子中做一些收尾的事，例如：关闭定时器、取消订阅消息
+		*/
+		//构造器
+		constructor(props){
+			console.log('Count---constructor');
+			super(props)
+			//初始化状态
+			this.state = {count:0}
+		}
+
+		//加1按钮的回调
+		add = ()=>{
+			//获取原状态
+			const {count} = this.state
+			//更新状态
+			this.setState({count:count+1})
+		}
+
+		//卸载组件按钮的回调
+		death = ()=>{
+			ReactDOM.unmountComponentAtNode(document.getElementById('test'))
+		}
+
+		//强制更新按钮的回调
+		force = ()=>{
+			this.forceUpdate()
+		}
+		
+		//若state的值在任何时候都取决于props，那么可以使用getDerivedStateFromProps
+		static getDerivedStateFromProps(props,state){
+			console.log('getDerivedStateFromProps',props,state);
+			return null
+		}
+
+		//在更新之前获取快照
+		getSnapshotBeforeUpdate(){
+			console.log('getSnapshotBeforeUpdate');
+			return 'atguigu'
+		}
+
+		//组件挂载完毕的钩子
+		componentDidMount(){
+			console.log('Count---componentDidMount');
+		}
+
+		//组件将要卸载的钩子
+		componentWillUnmount(){
+			console.log('Count---componentWillUnmount');
+		}
+
+		//控制组件更新的“阀门”
+		shouldComponentUpdate(){
+			console.log('Count---shouldComponentUpdate');
+			return true
+		}
+
+		//组件更新完毕的钩子
+		componentDidUpdate(preProps,preState,snapshotValue){
+			console.log('Count---componentDidUpdate',preProps,preState,snapshotValue);
+		}
+		
+		render(){
+			console.log('Count---render');
+			const {count} = this.state
+			return(
+				<div>
+					<h2>当前求和为：{count}</h2>
+					<button onClick={this.add}>点我+1</button>
+					<button onClick={this.death}>卸载组件</button>
+					<button onClick={this.force}>不更改任何状态中的数据，强制更新一下</button>
+				</div>
+			)
+		}
+	}
+	
+	//渲染组件
+	ReactDOM.render(<Count count={199}/>,document.getElementById('test'))
+</script>
+```
+
+**static getDerivedStateFromProps** 可以对比props和state，当xxx情况下选择return谁，就会以谁为主
+
+返回null就无影响
+
+**getSnapshotBeforeUpdate** return的东西叫快照，它会作为componentDidUpdate的第三个参数，就相当于记录了一下组建更新之前的东西（eg：当前浏览器的视口宽度、之前列表的高度等），看你想传啥都行
+
+【这两个钩子的用途都很罕见，但第二个比第一个有意义一点】
+
+getSnapshotBeforeUpdate 案例👇
+
+```js
+<script type="text/babel">
+	class NewsList extends React.Component{
+
+		state = {newsArr:[]}
+
+		componentDidMount(){
+			setInterval(() => {
+				//获取原状态
+				const {newsArr} = this.state
+				//模拟一条新闻
+				const news = '新闻'+ (newsArr.length+1)
+				//更新状态
+				this.setState({newsArr:[news,...newsArr]})
+			}, 1000);
+		}
+
+		getSnapshotBeforeUpdate(){
+			return this.refs.list.scrollHeight
+		}
+
+		componentDidUpdate(preProps,preState,height){
+			this.refs.list.scrollTop += this.refs.list.scrollHeight - height
+		}
+
+		render(){
+			return(
+				<div className="list" ref="list">
+					{
+						this.state.newsArr.map((n,index)=>{
+							return <div key={index} className="news">{n}</div>
+						})
+					}
+				</div>
+			)
+		}
+	}
+	ReactDOM.render(<NewsList/>,document.getElementById('test'))
+</script>
+```
+
+最常用的钩子没变，废弃三个，新增的也不常用，需要特殊的场景
+
+![image-20240318004454952](restart.assets/image-20240318004454952.png)
 
 
 
