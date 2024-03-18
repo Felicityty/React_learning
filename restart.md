@@ -1175,6 +1175,88 @@ getSnapshotBeforeUpdate 案例👇
 
 
 
+## 14 - dom的diffing
+
+对比的最小粒度是标签，只有标签中的文字变了，更新的也是整个标签。但这里也是逐层对比（递归），不会外部标签改了，内部标签没变也更新
+
+
+
+### key的作用
+
+虚拟dom没有value值
+
+经典面试题:
+  1). react/vue中的key有什么作用？（key的内部原理是什么？）
+  2). 为什么遍历列表时，key最好不要用index?
+
+  1. **虚拟DOM中key的作用**：
+      1). 简单的说: key是虚拟DOM对象的标识, 在更新显示时key起着极其重要的作用。
+
+      2). 详细的说: 当状态中的数据发生变化时，react会根据【新数据】生成【新的虚拟DOM】, 
+                    随后React进行【新虚拟DOM】与【旧虚拟DOM】的diff比较，比较规则如下：
+
+      ​        a. 旧虚拟DOM中找到了与新虚拟DOM相同的key：
+      ​              (1).若虚拟DOM中内容没变, 直接使用之前的真实DOM
+      ​              (2).若虚拟DOM中内容变了, 则生成新的真实DOM，随后替换掉页面中之前的真实DOM
+
+      ​        b. 旧虚拟DOM中未找到与新虚拟DOM相同的key
+      ​              根据数据创建新的真实DOM，随后渲染到到页面
+      
+  2. **用index作为key可能会引发的问题**：
+          
+            1. 若对数据进行：逆序添加、逆序删除等破坏顺序操作:
+                会产生没有必要的真实DOM更新 ==> 界面效果没问题, 但效率低。
+          
+            2. 如果结构中还包含输入类的DOM：
+                    会产生错误DOM更新 ==> 界面有问题。
+                  
+            3. 注意！如果不存在对数据的逆序添加、逆序删除等破坏顺序操作，
+              仅用于渲染列表用于展示，使用index作为key是没有问题的。
+      
+  3. 开发中如何选择key?:
+            1.最好使用每条数据的唯一标识作为key, 比如id、手机号、身份证号、学号等唯一值。而且不用慌，后端肯定会提供唯一标识，供删除之类的操作
+            2.如果确定只是简单的展示数据，用index也是可以的。
+
+
+
+
+
+# 2⃣️ 脚手架
+
+## 01 - 文件用途
+
+public -------- 静态文件
+
+​	favicon.ico -------- 网页图标
+
+​	index.html -------- 装各个组件的页面（SPA单页面应用）【最有用的，东西都往<div id="root"></div>里放】✅
+
+​	mainest.json -------- 做应用加壳时，app对于一些需要权限的配置【应用加壳 就可以变成一个app应用】
+
+​	robots.txt -------- 爬虫规则文件，可以规定爬虫在爬取页面时，什么能爬取，什么不能爬取
+
+src
+
+​	app.js -------- 组件，react脚手架会执行reactDom.render把app组件放到index.html文件的<div id="root"></div>里✅
+
+​	index.css -------- 通用样式
+
+​	index.js -------- 入口文件，引入react核心库、reactDom、通用样式、app组件（index.js和index.html之间的绑定是通过react的webpack写好的）✅
+
+​		<React.StrictMode></React.StrictMode> 可以检查app包裹的东西里的代码是否合理
+
+​		<img src="restart.assets/image-20240319002114644.png" alt="image-20240319002114644" style="zoom:33%;" />
+
+​	reportWebVitals.js -------- 记录页面性能，用上了'web-vitals'库，这个很庞大，有很多配置
+
+​	setupTests.js -------- 做整体、组件测试，引用了jest-dom库
+
+<img src="restart.assets/image-20240319002942508.png" alt="image-20240319002942508" style="zoom:50%;" />
+
+​	
+
+
+
 
 
 
