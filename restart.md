@@ -1255,6 +1255,194 @@ src
 
 ​	
 
+## 02 - import 和 export
+
+App.js
+
+```js
+// 创建“外壳”组件App
+import React from 'react'
+class App extends React.Component {
+  render() {
+    return (
+      <div>
+      	hello,react!
+      </div>
+    )
+  }
+}
+
+// 暴露App组件
+export default App
+```
+
+1 可以这么写
+
+App.js
+
+```js
+// 创建“外壳”组件App
+import React from 'react'
+import { Component } from React 📍
+class App extends Component { 📍
+  render() {
+    return (
+      <div>
+      	hello,react!
+      </div>
+    )
+  }
+}
+
+// 暴露App组件
+export default App
+```
+
+2 还可以这么写
+
+App.js
+
+```js
+// 创建“外壳”组件App
+import React, { Componet } from 'react' 📍 // 这不是解构赋值
+class App extends Component { 📍
+  render() {
+    return (
+      <div>
+      	hello,react!
+      </div>
+    )
+  }
+}
+
+// 暴露App组件
+export default App
+```
+
+3 再简写一下 ✅
+
+App.js
+
+```js
+// 创建“外壳”组件App
+import React, { Componet } from 'react' 📍 // 这不是解构赋值
+export default class App extends Component { 📍
+  render() {
+    return (
+      <div>
+      	hello,react!
+      </div>
+    )
+  }
+}
+```
+
+👇 `import React, { Componet } from 'react'` 解析 - 来个例子
+
+新建一个模块文件 moudule.js 和 index.js
+
+moudule.js
+
+```js
+const React = { a: 1, b: 2 }
+React.Component = class Component {
+  
+}
+export default React
+```
+
+index.js
+
+```js
+import React from './module.js'
+console.log(React) // { a: 1, b: 2, Component: f }
+// 使用这个类
+const { Component } = React // 这个是解构赋值
+console.log(new Component()) // Component{}类的实例对象
+```
+
+1 测试是否能使用{ Component }直接来解构赋值 ------ ✖️
+
+index.js
+
+```js
+import React, { Component } from './module.js' 📍
+console.log(React) // { a: 1, b: 2, Component: f }
+// 使用这个类
+console.log(new Component()) // Component{}类的实例对象
+```
+
+2 想用1中的写法 moudule.js 文件的改法
+
+moudule.js
+
+```js
+const React = { a: 1, b: 2 }
+export class Component { 📍 // 分别暴露
+  
+}
+React.Component = Component
+export default React 📍 // 默认暴露
+```
+
+🌟 综上`import React, { Componet } from 'react'` 这种引入方式的意味着'react'中用了多种暴露形式
+
+
+
+### 省略后缀
+
+react脚手架里，引入js和jsx都是可以省略后缀的
+
+app.js 一般不改jsx
+
+
+
+## 03 - 样式隔离
+
+把css文件前面加上module
+
+import styles from './index.module.css'
+
+标签中 className={styles.xxx}
+
+😲 原来之前react项目中用这种是为了做样式隔离啊，用less嵌套的话，就可以不这么写
+
+
+
+代码片段
+
+https://github.com/r5n-dev/vscode-react-javascript-snippets/blob/HEAD/docs/Snippets.md
+
+rcc - reactClassComponent
+
+rfc - reactFunctionComponent
+
+
+
+## 04 - todolist
+
+1 用展开运算符传props
+
+<img src="restart.assets/image-20240319142613753.png" alt="image-20240319142613753" style="zoom:40%;" />
+
+2 绑定事件的元素和要操作的元素相同 -> 用event.target（理解一下这里是什么意思 👉 这边是需要把点击enter键触发的事件绑定给input标签，并且同时要去拿到input的value值）
+
+3 拿键盘按键是否是回车键：event.key==='Enter'（keyCode已经要废弃了）
+
+4 nanoid和uuid一样，但这个库很小
+
+5 绑定函数加上小括号之后，在函数定义的时候要返回箭头函数
+
+<img src="restart.assets/image-20240319152051886.png" alt="image-20240319152051886" style="zoom:40%;" />
+
+或者改成这种
+
+<img src="restart.assets/image-20240319153726877.png" alt="image-20240319153726877" style="zoom:40%;" />
+
+6 状态提升：把数据放在某些组件共同的父组件state中
+
+7 defaultChecked：只执行一次，后面就不更改了，checked：配合onChange使用
+
 
 
 
