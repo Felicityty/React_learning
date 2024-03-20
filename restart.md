@@ -1211,7 +1211,8 @@ getSnapshotBeforeUpdate 案例👇
                     会产生错误DOM更新 ==> 界面有问题。
                   
             3. 注意！如果不存在对数据的逆序添加、逆序删除等破坏顺序操作，
-              仅用于渲染列表用于展示，使用index作为key是没有问题的。
+          
+          仅用于渲染列表用于展示，使用index作为key是没有问题的。
       
   3. 开发中如何选择key?:
             1.最好使用每条数据的唯一标识作为key, 比如id、手机号、身份证号、学号等唯一值。而且不用慌，后端肯定会提供唯一标识，供删除之类的操作
@@ -1442,6 +1443,211 @@ rfc - reactFunctionComponent
 6 状态提升：把数据放在某些组件共同的父组件state中
 
 7 defaultChecked：只执行一次，后面就不更改了，checked：配合onChange使用
+
+
+
+## 05 - 脚手架配置代理
+
+产生跨域的本质是ajax引擎
+
+中间的代理服务器是开在client端的，它没有ajax引擎，是转发请求的，所以不会出现跨域问题
+
+改了package.json文件后，必须重启项目才奏效
+
+### 1 配置一个代理
+
+> 在package.json中追加如下配置
+
+```json
+"proxy":"http://localhost:5000"
+```
+
+说明：
+
+1. 优点：配置简单，前端请求资源时可以不加任何前缀。
+2. 缺点：不能配置多个代理。
+3. 工作方式：上述方式配置代理，当请求了3000不存在的资源时，那么该请求会转发给5000 （优先匹配前端资源）
+
+package.json 👉 配置了proxy，不是所有请求都转发的，是要3000端口没有的，才转发给5000【配置一个代理】
+
+<img src="restart.assets/image-20240320004359812.png" alt="image-20240320004359812" style="zoom:50%;" />
+
+App.jsx 请求发送给代理服务器
+
+<img src="restart.assets/image-20240320004442654.png" alt="image-20240320004442654" style="zoom:50%;" />
+
+### 2 配置多个代理
+
+1. 第一步：创建代理配置文件，react脚手架会去找到这个文件的
+
+   ```
+   在src下创建配置文件：src/setupProxy.js
+   ```
+
+2. 编写setupProxy.js配置具体代理规则：【用commonjs的语法】
+
+   http-proxy-middleware 1.x 版本后用 `const { createProxyMiddleware } = require('http-proxy-middleware');`
+
+   ```js
+   const { createProxyMiddleware } = require('http-proxy-middleware')
+   
+   module.exports = function(app) {
+     app.use(
+       createProxyMiddleware('/api1', {  //api1是需要转发的请求(所有带有/api1前缀的请求都会转发给5000)
+         target: 'http://localhost:5000', //配置转发目标地址(能返回数据的服务器地址)
+         changeOrigin: true, //控制服务器收到的请求头中Host的值，如果不加，服务器还是可以知道请求真实来自于哪里，如果服务器有其他限制就会有影响，发现前端这边在欺骗它
+         /*
+         	changeOrigin设置为true时，服务器收到的请求头中的host为：localhost:5000
+         	changeOrigin设置为false时，服务器收到的请求头中的host为：localhost:3000
+         	changeOrigin默认值为false，但我们一般将changeOrigin值设为true
+         */
+         pathRewrite: {'^/api1': ''} //去除请求前缀，保证交给后台服务器的是正常请求地址(必须配置)
+       }),
+       createProxyMiddleware('/api2', { 
+         target: 'http://localhost:5001',
+         changeOrigin: true,
+         pathRewrite: {'^/api2': ''}
+       })
+     )
+   }
+   ```
+
+说明：
+
+1. 优点：可以配置多个代理，可以灵活的控制请求是否走代理。
+2. 缺点：配置繁琐，前端请求资源时必须加前缀。
+
+服务器拿到host值
+
+<img src="restart.assets/image-20240320105401234.png" alt="image-20240320105401234" style="zoom:50%;" />
+
+
+
+# 3⃣️ 搜索案例
+
+### 连续解构赋值
+
+但是这样不能单独拿出a、b，会显示undefined
+
+<img src="restart.assets/image-20240320115634561.png" alt="image-20240320115634561" style="zoom:50%;" />
+
+重命名
+
+<img src="restart.assets/image-20240320115824199.png" alt="image-20240320115824199" style="zoom:50%;" />
+
+
+
+## 01 - 发布订阅
+
+### 参数占位
+
+PubSub.subscribe的第二个参数是个函数，这个函数有两个参数分别是msg和data，但是msg用不到，这种情况下就用`_`来占个位置
+
+<img src="restart.assets/image-20240320151237405.png" alt="image-20240320151237405" style="zoom:50%;" />
+
+用法：https://github.com/mroderick/PubSubJS
+
+subscribe
+
+publish
+
+unsubscribe
+
+
+
+## 02 - fetch
+
+**fetch发请求没有用到xhr，但是浏览器兼容性一般，所以也可能不怎么用**
+
+**axios和jquery都是对xhr的封装**
+
+window自带，不用安装
+
+👇 下面这张图
+
+1 不加红框这句话：当断网时，会走连接服务器失败这句话，返回值时undefined，所以还会往下走，显示获取数据失败
+
+2 加红框这句话：我们不希望显示获取数据失败，而是**中断promise链，返回一个初始化状态的promise实例**❗️
+
+<img src="restart.assets/image-20240320154944805.png" alt="image-20240320154944805" style="zoom:50%;" />
+
+👇 优化
+
+<img src="restart.assets/image-20240320160433552.png" alt="image-20240320160433552" style="zoom:50%;" />
+
+👇 优化
+
+用上await和trycatch
+
+Emm 最外面的search函数应该要改成 `search = async () => {}`这样的，await得放在async里，不知道为什么视频这里不加async还没报错😵‍💫
+
+<img src="restart.assets/image-20240320160714245.png" alt="image-20240320160714245" style="zoom:50%;" />
+
+
+
+## 03 - 搜索案例总结
+
+1.设计状态时要考虑全面，例如带有网络请求的组件，要考虑请求失败怎么办。
+
+2.ES6小知识点：解构赋值+重命名
+
+​      let obj = {a:{b:1}}
+
+​      const {a} = obj; //传统解构赋值
+
+​      const {a:{b}} = obj; //连续解构赋值
+
+​      const {a:{b:value}} = obj; //连续解构赋值+重命名
+
+3.消息订阅与发布机制
+
+​      1.先订阅，再发布（理解：有一种隔空对话的感觉）
+
+​      2.适用于任意组件间通信
+
+​      3.要在组件的componentWillUnmount中取消订阅
+
+4.fetch发送请求（关注分离的设计思想）
+
+​      try {
+
+​        const response= await fetch(`/api1/search/users2?q=${keyWord}`)
+
+​        const data = await response.json()
+
+​        console.log(data);
+
+​      } catch (error) {
+
+​        console.log('请求出错',error);
+
+​      }
+
+
+
+# 4⃣️ 路由
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
