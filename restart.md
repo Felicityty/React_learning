@@ -1918,6 +1918,86 @@ this.props 打印的内容
 
 
 
+### 11 - this.prosp.history对象上的API
+
+操作路由跳转、前进、后退
+
+​    -this.prosp.history.push(path, state)
+
+​    -this.prosp.history.replace(path, state)
+
+​    -this.prosp.history.goBack()
+
+​    -this.prosp.history.goForward()
+
+​    -this.prosp.history.go(n) 正数前进n，负数后退n
+
+<img src="restart.assets/image-20240330232509350.png" alt="image-20240330232509350" style="zoom:50%;" />
+
+
+
+### 12 - withRouter
+
+react 中会区分一般组件和路由组件，所以如果想在一般组件中调用history的api就需要用withRouter这个函数
+
+Vue中不会出现这个问题，因为Vue的实例对象上都有这些api
+
+👉 原来
+
+<img src="restart.assets/image-20240330233617671.png" alt="image-20240330233617671" style="zoom:50%;" />
+
+👉 换一种
+
+<img src="restart.assets/image-20240330233658273.png" alt="image-20240330233658273" style="zoom:50%;" />
+
+👉 用上withRouter
+
+<img src="restart.assets/image-20240330233732112.png" alt="image-20240330233732112" style="zoom:50%;" />
+
+withRouter可以加工一般组件（接收一个一般组件），让一般组件具备路由组件所特有的几个API
+
+withRouter的返回值是一个新组件
+
+<img src="restart.assets/image-20240330234104094.png" alt="image-20240330234104094" style="zoom:50%;" />
+
+
+
+### 12 - BrowserRouter与HashRouter的区别
+
+1.底层原理不一样：
+
+​      BrowserRouter使用的是H5的history API（react中的this.props.history也是二次封装了这个history），不兼容IE9及以下版本。
+
+​      HashRouter使用的是URL的哈希值（#后面的东西都不会发送给服务器）。
+
+2.path表现形式不一样
+
+​      BrowserRouter的路径中没有#,例如：localhost:3000/demo/test
+
+​      HashRouter的路径包含#,例如：localhost:3000/#/demo/test
+
+3.刷新后对路由state参数的影响
+
+​      (1).BrowserRouter没有任何影响，因为state保存在history对象中（刷新后history里的东西也不会丢）。
+
+​      (2).HashRouter刷新后会导致路由state参数的丢失！！！（没有借助history对象去保存东西）【v6修复了】
+
+4.备注：HashRouter可以用于解决一些路径错误相关的问题（样式丢失的解决办法）
+
+👉 BrowserRouter 用得多
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
