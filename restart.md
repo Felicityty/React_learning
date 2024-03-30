@@ -1627,29 +1627,294 @@ Emm 最外面的search函数应该要改成 `search = async () => {}`这样的�
 
 # 4⃣️ 路由
 
+### 01 - 前端路由原理
+
+**1.** 什么是路由
+
+1. 一个路由就是一个映射关系(key:value)
+2. **key为路径, value可能是function或component**
+
+**2.** 路由分类
+
+1. 后端路由：
+
+   理解： value是function, 用来处理客户端提交的请求。
+
+   注册路由： router.get(path, function(req, res))
+
+   工作过程：当node接收到一个请求时, 根据请求路径找到匹配的路由, 调用路由中的函数来处理请求, 返回响应数据
+
+   <img src="restart.assets/image-20240328120027336.png" alt="image-20240328120027336" style="zoom:30%;" />
+
+2. 前端路由：
+
+   浏览器端路由，value是component，用于展示页面内容。
+
+   注册路由: <Route path="/test" component={Test}>
+
+   工作过程：当浏览器的path变为/test时, 当前路由组件就会变为Test组件
 
 
 
+都是建立在BOM的history的基础上的
 
 
 
+### 02 - push VS replace
+
+路由是一个栈结构
+
+push 就是往栈顶上加，back的时候栈顶元素先出
+
+replace是把栈顶元素直接替换成新的元素
 
 
 
+### 03 - react-router
+
+分为三种
+
+- web（react-router-dom）
+- native
+- any
 
 
 
+### 04 - 路由的基本使用
+
+1.明确好界面中的导航区、展示区
+
+2.导航区的a标签改为Link标签
+
+​      <Link to="/xxxxx">Demo</Link>
+
+3.展示区写Route标签进行路径的匹配
+
+​      <Route path='/xxxx' component={Demo}/>
+
+4.<App>的最外侧包裹了一个<BrowserRouter>或<HashRouter>
 
 
 
+### 05 - 路由组件与一般组件
+
+1.写法不同：
+
+  一般组件：<Demo/>
+
+  路由组件：<Route path="/demo" component={Demo}/>
+
+2.存放位置不同：
+
+  一般组件：components
+
+  路由组件：pages
+
+3.接收到的props不同：
+
+  一般组件：写组件标签时传递了什么，就能收到什么
+
+  路由组件：接收到三个固定的属性
+
+- history:
+
+​            go: ƒ go(n)
+
+​            goBack: ƒ goBack()
+
+​            goForward: ƒ goForward()
+
+​            push: ƒ push(path, state)
+
+​            replace: ƒ replace(path, state)
+
+- location:
+
+​            pathname: "/about"
+
+​            search: ""
+
+​            state: undefined
+
+- match:
+
+​            params: {}
+
+​            path: "/about"
+
+​            url: "/about"
 
 
 
+### 04 - 一些内置组件
+
+#### Link（🈚️高亮）
+
+一般路由
+
+<img src="restart.assets/image-20240330135952817.png" alt="image-20240330135952817" style="zoom:50%;" />
+
+#### NavLink（🈶️高亮）
+
+1.NavLink可以实现路由链接的高亮，通过activeClassName指定样式名，默认是选中添加active的类名
+
+2.标签体内容是一个特殊的标签属性，不用放在开始标签和结束标签中间，再用this.props.children拿到，直接可以放在一个单标签中，用children属性传入
+
+**封装MyNavLink：**
+
+App.jsx
+
+<img src="restart.assets/image-20240330140331732.png" alt="image-20240330140331732" style="zoom:50%;" />
+
+MyNavLink.jsx
+
+<img src="restart.assets/image-20240330140444529.png" alt="image-20240330140444529" style="zoom:50%;" />
+
+#### Switch(改成了routes)
+
+1.通常情况下，path和component是一一对应的关系。
+
+2.Switch可以提高路由匹配效率(单一匹配)。
+
+<img src="restart.assets/image-20240330141328567.png" alt="image-20240330141328567" style="zoom:50%;" />
 
 
 
+### 05 - 解决多级路径刷新页面样式丢失的问题
+
+emm 新版的解决了这个问题，问题产生是因为请求bootstrap的路径不对，请求的路径都改成以下这种后，请求css的路径中也会莫名其妙加上/atguigu
+
+<img src="restart.assets/image-20240330142319189.png" alt="image-20240330142319189" style="zoom:50%;" />
+
+找不到的话，会默认返回index.html
+
+<img src="restart.assets/image-20240330142518073.png" alt="image-20240330142518073" style="zoom:50%;" />
+
+**解决方案：**
+
+1.public/index.html 中 引入样式时不写 ./ 写 / （常用）
+
+2.public/index.html 中 引入样式时不写 ./ 写 %PUBLIC_URL% （常用）
+
+3.使用HashRouter（因为hash路由发送网络请求时，不会带#后面的东西）
 
 
+
+### 06 - 严格匹配与模糊匹配
+
+1.默认使用的是模糊匹配（简单记：【输入的路径】必须包含要【匹配的路径】，且顺序要一致）
+
+2.开启严格匹配：<Route exact path="/about" component={About}/>
+
+3.严格匹配不要随便开启，需要再开，有些时候开启会导致无法继续匹配二级路由
+
+<img src="restart.assets/image-20240330150623979.png" alt="image-20240330150623979" style="zoom:50%;" />
+
+
+
+### 07 - 一些内置组件
+
+#### Redirect
+
+1.一般写在所有路由注册的最下方，当所有路由都无法匹配时，跳转到Redirect指定的路由
+2.具体编码：
+    <Switch>
+      <Route path="/about" component={About}/>
+      <Route path="/home" component={Home}/>
+      <Redirect to="/about"/>
+    </Switch>
+
+
+
+### 08 - 嵌套路由
+
+1.注册子路由时要写上父路由的path值
+
+2.路由的匹配是按照注册路由的顺序进行的
+
+3.不能开启严格匹配
+
+<img src="restart.assets/image-20240330152029297.png" alt="image-20240330152029297" style="zoom:50%;" />
+
+👉 V6改了，一级注册路由在path后面加/*，二级注册路由path只用写子路由
+
+
+
+### 09 - 向路由组件传递参数
+
+#### params
+
+✅ 用得最多
+
+路由链接(携带参数)：<Link to='/demo/test/tom/18'}>详情</Link>
+
+注册路由(声明接收)：<Route path="/demo/test/:name/:age" component={Test}/> ❗️只有这种需要声明接受
+
+接收参数：this.props.match.params
+
+<img src="restart.assets/image-20240330154055107.png" alt="image-20240330154055107" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240330154205118.png" alt="image-20240330154205118" style="zoom:50%;" />
+
+this.props 打印的内容
+
+<img src="restart.assets/image-20240330153738394.png" alt="image-20240330153738394" style="zoom:50%;" />
+
+#### search（query形式）
+
+✅ 需要解析
+
+路由链接(携带参数)：<Link to='/demo/test?name=tom&age=18'}>详情</Link>
+
+注册路由(无需声明，正常注册即可)：<Route path="/demo/test" component={Test}/>
+
+接收参数：this.props.location.search
+
+备注：获取到的search是**urlencoded编码字符串**，需要借助querystring解析
+
+<img src="restart.assets/image-20240330160020236.png" alt="image-20240330160020236" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240330160043785.png" alt="image-20240330160043785" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240330160158433.png" alt="image-20240330160158433" style="zoom:50%;" />
+
+现在是import qs from 'qs'，querystringfy弃用了
+
+<img src="restart.assets/image-20240330155704855.png" alt="image-20240330155704855" style="zoom:50%;" />
+
+#### state
+
+✅ 不想用户知道传了什么参数
+
+👉 Link的to属性需要传一个对象，路径中不带任何参数，不是组件中的state
+
+路由链接(携带参数)：<Link to={{pathname:'/demo/test',state:{name:'tom',age:18}}}>详情</Link>
+
+注册路由(无需声明，正常注册即可)：<Route path="/demo/test" component={Test}/>
+
+接收参数：this.props.location.state
+
+备注：刷新也可以保留住参数（HashRouter会丢）
+
+<img src="restart.assets/image-20240330161328530.png" alt="image-20240330161328530" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240330161346441.png" alt="image-20240330161346441" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240330161426408.png" alt="image-20240330161426408" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240330160627876.png" alt="image-20240330160627876" style="zoom:50%;" />
+
+
+
+### 10 - push 🆚 replace模式
+
+默认都是push模式
+
+<img src="restart.assets/image-20240330162233226.png" alt="image-20240330162233226" style="zoom:50%;" />
+
+👉 应用场景：登录成功的时候需要开启replace，不用退回去了，你已经登录成功了，就进入首页
+
+如果所有路由都开启replace模式，就意味着回退按钮一直灰着了
 
 
 
