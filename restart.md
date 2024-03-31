@@ -1990,6 +1990,361 @@ withRouter的返回值是一个新组件
 
 
 
+# 5⃣️ redux
+
+## 01 - 概念
+
+1. redux是一个专门用于做***\*状态管理\****的JS库(不是react插件库)。
+2. 它可以用在react, angular, vue等项目中, 但基本与react配合使用。
+3. 作用: 集中式管理react应用中多个组件***\*共享\****的状态。
+
+
+
+## 02 - 什么情况下需要使用redux
+
+1. 某个组件的状态，需要让其他组件可以随时拿到（共享）。
+2. 一个组件需要改变另一个组件的状态（通信）。
+3. 总体原则：能不用就不用, 如果不用比较吃力才考虑使用。
+
+
+
+## 03 - 工作流程
+
+👉 形象类比：客人需要点餐→服务员记录→告诉餐厅老板→后厨初始加工
+
+初始化时，action动作对象中的 type是@@init@@，data没有
+
+![image-20240331150818723](restart.assets/image-20240331150818723.png)
+
+### action
+
+1. 动作的对象
+
+2. 包含2个属性
+
+   type：标识属性, 值为字符串, 唯一, 必要属性
+
+    data：数据属性, 值类型任意, 可选属性
+
+3. 例子：{ type: 'ADD_STUDENT',data:{name: 'tom',age:18} }
+
+### reducer
+
+1. 用于初始化状态、加工状态
+2. 加工时，根据旧的state和action， 产生新的state的纯函数
+
+### store
+
+1. 将state、action、reducer联系在一起的对象
+
+
+
+## 04 - 求和案例
+
+### 1 复习一下react脚手架最简单的文件结构
+
+➖ public里的删，src里的删，.git删，.gitignore删
+
+➕ public里建index.html（快捷键：!）
+
+<img src="restart.assets/image-20240331152430054.png" alt="image-20240331152430054" style="zoom:50%;" />
+
+➕ src里建App.js（快捷键：acc）
+
+<img src="restart.assets/image-20240331152454850.png" alt="image-20240331152454850" style="zoom:50%;" />
+
+➕ src里建index.js
+
+<img src="restart.assets/image-20240331152559706.png" alt="image-20240331152559706" style="zoom:50%;" />
+
+
+
+### 2 精简版
+
+```markdown
+(1).去除Count组件自身的状态（之后放到store中维护）
+(2).src下建立:
+      -redux
+        -store.js
+        -count_reducer.js
+
+(3).store.js：
+			1).引入redux中的createStore函数，创建一个store
+			2).createStore调用时要传入一个为其服务的reducer
+			3).记得暴露store对象
+
+(4).count_reducer.js：
+			1).reducer的本质是一个函数，接收：preState,action，返回加工后的状态
+			2).reducer有两个作用：初始化状态，加工状态
+			3).reducer被第一次调用时，是store自动触发的，
+							传递的preState是undefined,
+							传递的action是:{type:'@@REDUX/INIT_a.2.b.4}
+
+(5).在index.js中监测store中状态的改变，一旦发生改变重新渲染<App/>
+		备注：redux只负责管理状态，至于状态的改变驱动着页面的展示，要靠我们自己写。
+```
+
+src下新建redux文件夹
+
+➕ store.js
+
+```js
+/* 
+	该文件专门用于暴露一个store对象，整个应用只有一个store对象
+*/
+
+//引入createStore，专门用于创建redux中最为核心的store对象（⚠️createStore已废弃）
+import { legacy_createStore as createStore } from 'redux'
+//引入为Count组件服务的reducer
+import countReducer from './count_reducer'
+//暴露store
+export default createStore(countReducer)
+```
+
+➕ count_reducer.js
+
+- reducer里只放基本操作，纯函数
+- 注意这边对之前的状态preState初始化的操作👍
+
+```js
+/* 
+	1.该文件是用于创建一个为Count组件服务的reducer，reducer的本质就是一个函数
+	2.reducer函数会接到两个参数，分别为：之前的状态(preState)，动作对象(action)
+*/
+
+const initState = 0 //初始化状态
+export default function countReducer(preState=initState, action){
+	//从action对象中获取：type、data
+	const {type, data} = action
+	//根据type决定如何加工数据
+	switch (type) {
+		case 'increment': //如果是加
+			return preState + data
+		case 'decrement': //若果是减
+			return preState - data
+		default:
+			return preState
+	}
+}
+```
+
+➕ src/components/Count/index.jsx
+
+- 即使引入redux维护的状态，组件中还是能拥有自己的状态的
+- `store.getState()` 拿到redux维护的状态
+- 这边点击按钮后会触发redux中状态的更新，但是不会重新渲染页面（调用render），需手动
+  - 在每个组件中的componentDidMount钩子中去添加`store.subscribe`，再组件挂载完成之后，就会去检测redux中状态的变化（有点像Vue中的watch）
+
+```js
+import React, { Component } from 'react'
+//引入store，用于获取redux中保存状态
+import store from '../../redux/store'
+
+export default class Count extends Component {
+
+	state = {carName:'奔驰c63'} // 即使引入redux维护的状态，组件中还是能拥有自己的状态的
+
+	/* componentDidMount(){
+		// 检测redux中状态的变化，只要变化，就调用render
+		store.subscribe(()=>{
+			this.setState({})
+		})
+	} */
+
+	//加法
+	increment = ()=>{
+		const {value} = this.selectNumber
+		store.dispatch({type:'increment',data:value*1})
+	}
+	//减法
+	decrement = ()=>{
+		const {value} = this.selectNumber
+		store.dispatch({type:'decrement',data:value*1})
+	}
+	//奇数再加
+	incrementIfOdd = ()=>{
+		const {value} = this.selectNumber
+		const count = store.getState()
+		if(count % 2 !== 0){
+			store.dispatch({type:'increment',data:value*1})
+		}
+	}
+	//异步加
+	incrementAsync = ()=>{
+		const {value} = this.selectNumber
+		setTimeout(()=>{
+			store.dispatch({type:'increment',data:value*1})
+		},500)
+	}
+
+	render() {
+		return (
+			<div>
+				<h1>当前求和为：{store.getState()}</h1>
+				<select ref={c => this.selectNumber = c}>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>&nbsp;
+				<button onClick={this.increment}>+</button>&nbsp;
+				<button onClick={this.decrement}>-</button>&nbsp;
+				<button onClick={this.incrementIfOdd}>当前求和为奇数再加</button>&nbsp;
+				<button onClick={this.incrementAsync}>异步加</button>&nbsp;
+			</div>
+		)
+	}
+}
+```
+
+- - 写在 src/index.js 中，只要store中的数据变化，就会去触发render函数
+
+```js
+import React from 'react'
+import ReactDOM from 'react-dom'
+import App from './App'
+import store from './redux/store'
+
+ReactDOM.render(<App/>,document.getElementById('root'))
+
+store.subscribe(()=>{
+	ReactDOM.render(<App/>,document.getElementById('root'))
+})
+```
+
+
+
+### 🕳️ 这里总感觉有点奇怪的，之后研究一下函数式组件是怎么做的😵‍💫
+
+
+
+### 3 完整版
+
+就是把Action Creators补回来
+
+```markdown
+新增文件：
+	1.count_action.js 专门用于创建action对象
+	2.constant.js 放置容易写错的type值
+```
+
+➕ redux/count_action.js
+
+- 把原来派发的action动作对象提出来了
+
+```js
+/* 
+	该文件专门为Count组件生成action对象
+*/
+import {INCREMENT,DECREMENT} from './constant'
+
+export const createIncrementAction = data => ({type:INCREMENT,data})
+export const createDecrementAction = data => ({type:DECREMENT,data})
+```
+
+➕ redux/constant.js
+
+- 防止单词拼错，因为拼错不会有报错
+- 所有用到`'increment'` 和 `'decrement'` 的都需要引入这个文件
+
+```js
+/* 
+	该模块是用于定义action对象中type类型的常量值，目的只有一个：便于管理的同时防止程序员单词写错
+*/
+export const INCREMENT = 'increment'
+export const DECREMENT = 'decrement'
+```
+
+〰️ count_reducer.js
+
+- 引入constant
+
+```js
+import {INCREMENT,DECREMENT} from './constant' 📍
+
+const initState = 0 //初始化状态
+export default function countReducer(preState=initState,action){
+	// console.log(preState);
+	//从action对象中获取：type、data
+	const {type,data} = action
+	//根据type决定如何加工数据
+	switch (type) {
+		case INCREMENT: //如果是加 📍
+			return preState + data
+		case DECREMENT: //若果是减 📍
+			return preState - data
+		default:
+			return preState
+	}
+}
+```
+
+〰️ src/components/Count/index.jsx
+
+- 引入专门为Count组件生成action对象
+
+```js
+import React, { Component } from 'react'
+//引入store，用于获取redux中保存状态
+import store from '../../redux/store'
+//引入actionCreator，专门用于创建action对象
+import {createIncrementAction,createDecrementAction} from '../../redux/count_action' 📍
+
+export default class Count extends Component {
+
+	state = {carName:'奔驰c63'}
+
+	/* componentDidMount(){
+		//检测redux中状态的变化，只要变化，就调用render
+		store.subscribe(()=>{
+			this.setState({})
+		})
+	} */
+
+	//加法
+	increment = ()=>{
+		const {value} = this.selectNumber
+		store.dispatch(createIncrementAction(value*1)) 📍
+	}
+	//减法
+	decrement = ()=>{
+		const {value} = this.selectNumber
+		store.dispatch(createDecrementAction(value*1)) 📍
+	}
+	//奇数再加
+	incrementIfOdd = ()=>{
+		const {value} = this.selectNumber
+		const count = store.getState()
+		if(count % 2 !== 0){
+			store.dispatch(createIncrementAction(value*1)) 📍
+		}
+	}
+	//异步加
+	incrementAsync = ()=>{
+		const {value} = this.selectNumber
+		setTimeout(()=>{
+			store.dispatch(createIncrementAction(value*1)) 📍
+		},500)
+	}
+
+	render() {
+		return (
+			<div>
+				<h1>当前求和为：{store.getState()}</h1>
+				<select ref={c => this.selectNumber = c}>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>&nbsp;
+				<button onClick={this.increment}>+</button>&nbsp;
+				<button onClick={this.decrement}>-</button>&nbsp;
+				<button onClick={this.incrementIfOdd}>当前求和为奇数再加</button>&nbsp;
+				<button onClick={this.incrementAsync}>异步加</button>&nbsp;
+			</div>
+		)
+	}
+}
+```
+
 
 
 
