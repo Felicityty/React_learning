@@ -2213,7 +2213,15 @@ store.subscribe(()=>{
 
 
 
-### 🕳️ 这里总感觉有点奇怪的，之后研究一下函数式组件是怎么做的😵‍💫
+### 🕳️ 这里总感觉有点奇怪的😵‍💫
+
+以上两种解决办法都还挺奇怪的
+
+第一种每个用到redux的组件都得这么写，很麻烦
+
+第二种总觉得会影响性能诶，虽然说有diff算法
+
+👉 用上react-redux之后就不需要自己监测了，connect封装了监测redux中状态改变的能力
 
 
 
@@ -2226,6 +2234,10 @@ store.subscribe(()=>{
 	1.count_action.js 专门用于创建action对象
 	2.constant.js 放置容易写错的type值
 ```
+
+👉 文件结构
+
+<img src="restart.assets/image-20240401121317742.png" alt="image-20240401121317742" style="zoom:50%;" />
 
 ➕ redux/count_action.js
 
@@ -2344,6 +2356,1021 @@ export default class Count extends Component {
 	}
 }
 ```
+
+
+
+### 4 异步action版
+
+action：
+
+- Object 对象 - 同步
+- function - 异步
+
+```markdown
+(1).明确：延迟的动作不想交给组件自身，想交给action
+(2).何时需要异步action：想要对状态进行操作，但是具体的数据靠异步任务返回。
+(3).具体编码：
+		1).yarn add redux-thunk，并配置在store中
+		2).创建action的函数不再返回一般对象，而是一个函数，该函数中写异步任务。
+		3).异步任务有结果后，分发一个同步的action去真正操作数据。
+(4).备注：异步action不是必须要写的，完全可以自己等待异步任务的结果了再去分发同步action。
+```
+
+本来的异步直接写在组件中，但是也可以写在action里
+
+〰️ src/components/Count/index.jsx
+
+- 把setTimeout操作封装到action里面去
+
+```js
+import React, { Component } from 'react'
+//引入store，用于获取redux中保存状态
+import store from '../../redux/store'
+//引入actionCreator，专门用于创建action对象
+import {
+	createIncrementAction,
+	createDecrementAction,
+	createIncrementAsyncAction 📍
+} from '../../redux/count_action'
+
+export default class Count extends Component {
+
+	state = {carName:'奔驰c63'}
+
+	/* componentDidMount(){
+		//检测redux中状态的变化，只要变化，就调用render
+		store.subscribe(()=>{
+			this.setState({})
+		})
+	} */
+
+	//加法
+	increment = ()=>{
+		const {value} = this.selectNumber
+		store.dispatch(createIncrementAction(value*1))
+	}
+	//减法
+	decrement = ()=>{
+		const {value} = this.selectNumber
+		store.dispatch(createDecrementAction(value*1))
+	}
+	//奇数再加
+	incrementIfOdd = ()=>{
+		const {value} = this.selectNumber
+		const count = store.getState()
+		if(count % 2 !== 0){
+			store.dispatch(createIncrementAction(value*1))
+		}
+	}
+	//异步加
+	incrementAsync = ()=>{
+		const {value} = this.selectNumber
+		// setTimeout(()=>{ 📍
+			store.dispatch(createIncrementAsyncAction(value*1,500)) 📍
+		// },500) 📍
+	}
+
+	render() {
+		return (
+			<div>
+				<h1>当前求和为：{store.getState()}</h1>
+				<select ref={c => this.selectNumber = c}>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>&nbsp;
+				<button onClick={this.increment}>+</button>&nbsp;
+				<button onClick={this.decrement}>-</button>&nbsp;
+				<button onClick={this.incrementIfOdd}>当前求和为奇数再加</button>&nbsp;
+				<button onClick={this.incrementAsync}>异步加</button>&nbsp;
+			</div>
+		)
+	}
+}
+```
+
+〰️ redux/count_action.js
+
+- 新增异步action createIncrementAsyncAction，它的返回值是一个函数，在这个函数中去派发同步增加的更新
+- **store的dispatch方法会判断（createIncrementAsyncAction是store.dispatch调用的）：传入值是函数还是对象。如果是函数，那就给这个函数传参数，参数是store的dispatch方法并且执行这个函数**
+
+```js
+/* 
+	该文件专门为Count组件生成action对象
+*/
+import {INCREMENT,DECREMENT} from './constant'
+
+//同步action，就是指action的值为Object类型的一般对象
+export const createIncrementAction = data => ({type:INCREMENT,data})
+export const createDecrementAction = data => ({type:DECREMENT,data})
+
+//异步action，就是指action的值为函数,异步action中一般都会调用同步action，异步action不是必须要用的。
+export const createIncrementAsyncAction = (data,time) => { 📍
+	return (dispatch)=>{ 📍
+		setTimeout(()=>{ 📍
+    	// store.dispatch(createIncrementAction(data)) (本来是这么写的，上方还需引入store)📍
+			dispatch(createIncrementAction(data)) 📍
+		},time) 📍
+	} 📍
+} 📍
+```
+
+👇 有点理解不了的话，可以看一下以前手写promisify中返回一个函数它的参数拿到的是什么
+
+<img src="restart.assets/image-20240401130240096.png" alt="image-20240401130240096" style="zoom:50%;" />
+
+〰️ action.js
+
+- 补充一个中间件，thunk是形实转换程序，它能够让store认函数类型的action，否则报以下错误
+
+  <img src="restart.assets/image-20240401130731569.png" alt="image-20240401130731569" style="zoom:50%;" />
+
+```js
+/* 
+	该文件专门用于暴露一个store对象，整个应用只有一个store对象
+*/
+
+//引入createStore，专门用于创建redux中最为核心的store对象（⚠️createStore已废弃）
+import { legacy_createStore as createStore, applyMiddleware } from 'redux' 📍
+//引入为Count组件服务的reducer
+import countReducer from './count_reducer'
+//引入redux-thunk，用于支持异步action
+import thunk from 'redux-thunk' 📍
+//暴露store
+export default createStore(countReducer, applyMiddleware(thunk)) 📍
+```
+
+
+
+### 5 react-redux 基本使用
+
+把之前的Count组件拆分成UI组件和容器组件
+
+✅ redux文件夹中的文件都没有修改
+
+```markdown
+(1).明确两个概念：
+			1).UI组件:不能使用任何redux的api，只负责页面的呈现、交互等。
+			2).容器组件：负责和redux通信，将结果交给UI组件。
+(2).如何创建一个容器组件————靠react-redux 的 connect函数
+				connect(mapStateToProps,mapDispatchToProps)(UI组件)
+					-mapStateToProps:映射状态，返回值是一个对象
+					-mapDispatchToProps:映射操作状态的方法，返回值是一个对象
+(3).备注1：容器组件中的store是靠props传进去的，而不是在容器组件中直接引入
+(4).备注2：mapDispatchToProps，也可以是一个对象
+```
+
+![react-redux模型图](restart.assets/react-redux模型图.png)
+
+➕ src/containers/Count/index.jsx【容器组件】
+
+- 使用react-redux提供的connect方法连接UI组件与redux
+
+- connect有两个参数，都是函数，返回对象（相当于是给CountUI标签传入相应的属性）
+
+- 这两个函数参数react-redux都会把所需的state和dispatch给到
+
+  不用去引入store，在App.js中已经把store作为props传入了，这边的a函数是react-redux调用的，不需要自己去拿`store.getState()`，而是直接会在调用的时候会把状态state传给我们，我们只需要接收，然后给到UI组件就行了
+
+  同理，我们也不需要自己写`store.dispatch`，在第二个参数中，react-redux也会把dispatch作为参数给我们
+
+  👉 感觉也正是因为这个，所以这里的传入connect的两个参数也必须是函数
+
+```js
+//引入Count的UI组件
+import CountUI from '../../components/Count'
+//引入action
+import {
+	createIncrementAction,
+	createDecrementAction,
+	createIncrementAsyncAction
+} from '../../redux/count_action'
+
+//引入connect用于连接UI组件与redux
+import {connect} from 'react-redux'
+
+/* 
+	1.mapStateToProps函数返回的是一个对象；
+	2.返回的对象中的key就作为传递给UI组件props的key,value就作为传递给UI组件props的value
+	3.mapStateToProps用于传递状态
+*/
+function mapStateToProps(state){ 👍
+	return {count:state} // 相当于是<CountUI count={state}> ❗️
+}
+
+/* 
+	1.mapDispatchToProps函数返回的是一个对象；
+	2.返回的对象中的key就作为传递给UI组件props的key,value就作为传递给UI组件props的value
+	3.mapDispatchToProps用于传递操作状态的方法
+*/
+function mapDispatchToProps(dispatch){ 👍
+	return {
+		jia:number => dispatch(createIncrementAction(number)),
+		jian:number => dispatch(createDecrementAction(number)),
+		jiaAsync:(number,time) => dispatch(createIncrementAsyncAction(number,time)),
+	}
+}
+
+//使用connect()()创建并暴露一个Count的容器组件
+export default connect(mapStateToProps,mapDispatchToProps)(CountUI)
+```
+
+〰️ src/components/Count/index.jsx【UI组件】
+
+- 已经通过connect函数把redux和UI组件连接起来了，所以这里调用状态和用于操作状态的方法都只需要从`this.props`中拿
+
+```js
+import React, { Component } from 'react'
+
+export default class Count extends Component {
+
+	state = {carName:'奔驰c63'}
+
+	//加法
+	increment = ()=>{
+		const {value} = this.selectNumber
+		this.props.jia(value*1) 📍
+	}
+	//减法
+	decrement = ()=>{
+		const {value} = this.selectNumber
+		this.props.jian(value*1) 📍
+	}
+	//奇数再加
+	incrementIfOdd = ()=>{
+		const {value} = this.selectNumber
+		if(this.props.count % 2 !== 0){ 📍
+			this.props.jia(value*1) 📍
+		} 📍
+	}
+	//异步加
+	incrementAsync = ()=>{
+		const {value} = this.selectNumber
+		this.props.jiaAsync(value*1,500) 📍
+	}
+
+	render() {
+		//console.log('UI组件接收到的props是',this.props);
+		return (
+			<div>
+				<h1>当前求和为：{this.props.count}</h1> 📍
+				<select ref={c => this.selectNumber = c}>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>&nbsp;
+				<button onClick={this.increment}>+</button>&nbsp;
+				<button onClick={this.decrement}>-</button>&nbsp;
+				<button onClick={this.incrementIfOdd}>当前求和为奇数再加</button>&nbsp;
+				<button onClick={this.incrementAsync}>异步加</button>&nbsp;
+			</div>
+		)
+	}
+}
+```
+
+〰️ src/App.js
+
+- 改为引入容器组件
+- 给容器组件传store直接作为标签属性传
+
+```js
+import React, { Component } from 'react'
+import Count from './containers/Count' 📍
+import store from './redux/store' 📍
+
+export default class App extends Component {
+	render() {
+		return (
+			<div>
+				{/* 给容器组件传递store */}
+				<Count store={store} /> 📍
+			</div>
+		)
+	}
+}
+```
+
+
+
+### 6 react-redux优化
+
+```markdown
+(1).容器组件和UI组件整合一个文件
+(2).无需自己给容器组件传递store，给<App/>包裹一个<Provider store={store}>即可。
+(3).使用了react-redux后也不用再自己检测redux中状态的改变了，容器组件可以自动完成这个工作。
+(4).mapDispatchToProps也可以简单的写成一个对象
+(5).一个组件要和redux“打交道”要经过哪几步？
+				(1).定义好UI组件---不暴露
+				(2).引入connect生成一个容器组件，并暴露，写法如下：
+						connect(
+							state => ({key:value}), //映射状态
+							{key:xxxxxAction} //映射操作状态的方法
+						)(UI组件)
+				(4).在UI组件中通过this.props.xxxxxxx读取和操作状态
+```
+
+
+
+#### 1）mapDispatchToProps的api层面的优化
+
+mapDispatchToProps可以传入函数，也可以写成对象
+
+〰️ src/containers/Count/index.jsx【容器组件】
+
+```js
+//引入Count的UI组件
+import CountUI from '../../components/Count'
+//引入action
+import {
+	createIncrementAction,
+	createDecrementAction,
+	createIncrementAsyncAction
+} from '../../redux/count_action'
+
+//引入connect用于连接UI组件与redux
+import {connect} from 'react-redux'
+
+//使用connect()()创建并暴露一个Count的容器组件
+export default connect(
+  state => ({count: state}), // mapStateToProps简写 📍
+  { // mapDispatchToProps简写（api层面） 📍
+    jia: createIncrementAction, 📍
+    jian: createDecrementAction, 📍
+    jiaAsync: createIncrementAsyncAction, 📍
+  ) 📍
+)(CountUI)
+```
+
+#### 2）监测redux状态改变的优化
+
+〰️ src/index.js
+
+- 不用手动去监测了，connect封装了监测redux中状态改变的能力（react-redux的核心都在connect中）
+
+```js
+import React from 'react'
+import ReactDOM from 'react-dom'
+import App from './App'
+import store from './redux/store' ✖️
+
+ReactDOM.render(<App/>,document.getElementById('root'))
+
+//监测redux中状态的改变，如redux的状态发生了改变，那么重新渲染App组件 ✖️
+store.subscribe(()=>{ ✖️
+	ReactDOM.render(<App/>,document.getElementById('root')) ✖️
+}) ✖️
+```
+
+#### 3）Provider组件的优化
+
+如果在App.js中有很多容器组件，每个容器组件都需要传入store就会很不合理
+
+<img src="restart.assets/image-20240401150958717.png" alt="image-20240401150958717" style="zoom:40%;" />
+
+〰️ src/App.js
+
+- 不用给每个容器组件分为传store了
+
+```js
+import React, { Component } from 'react'
+import Count from './containers/Count'
+
+export default class App extends Component {
+	render() {
+		return (
+			<div>
+				<Count/> 📍
+			</div>
+		)
+	}
+}
+```
+
+〰️ src/index.js
+
+- 利用react-redux封装好的Provider，它能给App中所有需要store的容器组件传入store，不用自己再一个个写着传入了
+
+```js
+import React from 'react'
+import ReactDOM from 'react-dom'
+import App from './App'
+import store from './redux/store' 📍
+import {Provider} from 'react-redux' 📍
+
+ReactDOM.render(
+	<Provider store={store}> 📍
+		<App/>
+	</Provider>, 📍
+	document.getElementById('root')
+)
+```
+
+#### 4）文件层面
+
+把components和container整合了，一个文件也可以定义两个组件
+
+〰️ src/containers/Count/index.jsx【容器组件+UI组件】
+
+```js
+import React, { Component } from 'react' 📍
+//引入action
+import {
+	createIncrementAction,
+	createDecrementAction,
+	createIncrementAsyncAction
+} from '../../redux/count_action'
+//引入connect用于连接UI组件与redux
+import {connect} from 'react-redux'
+
+//定义UI组件
+class Count extends Component { 📍
+
+	state = {carName:'奔驰c63'}
+
+	//加法
+	increment = ()=>{
+		const {value} = this.selectNumber
+		this.props.jia(value*1)
+	}
+	//减法
+	decrement = ()=>{
+		const {value} = this.selectNumber
+		this.props.jian(value*1)
+	}
+	//奇数再加
+	incrementIfOdd = ()=>{
+		const {value} = this.selectNumber
+		if(this.props.count % 2 !== 0){
+			this.props.jia(value*1)
+		}
+	}
+	//异步加
+	incrementAsync = ()=>{
+		const {value} = this.selectNumber
+		this.props.jiaAsync(value*1,500)
+	}
+
+	render() {
+		//console.log('UI组件接收到的props是',this.props);
+		return (
+			<div>
+				<h1>当前求和为：{this.props.count}</h1>
+				<select ref={c => this.selectNumber = c}>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>&nbsp;
+				<button onClick={this.increment}>+</button>&nbsp;
+				<button onClick={this.decrement}>-</button>&nbsp;
+				<button onClick={this.incrementIfOdd}>当前求和为奇数再加</button>&nbsp;
+				<button onClick={this.incrementAsync}>异步加</button>&nbsp;
+			</div>
+		)
+	}
+}
+
+//使用connect()()创建并暴露一个Count的容器组件
+export default connect(
+	state => ({count:state}),
+	//mapDispatchToProps的简写
+	{
+		jia:createIncrementAction,
+		jian:createDecrementAction,
+		jiaAsync:createIncrementAsyncAction,
+	}
+)(Count) 📍
+```
+
+#### 5）总结：如何写一个组件
+
+https://www.bilibili.com/video/BV1wy4y1D7JT?t=1184.4&p=108
+
+
+
+### 7 redux实现组件间的数据共享
+
+新增Person组件
+
+```markdown
+(1).定义一个Pserson组件，和Count组件通过redux共享数据。
+(2).为Person组件编写：reducer、action，配置constant常量。
+(3).重点：Person的reducer和Count的Reducer要使用combineReducers进行合并，
+		合并后的总状态是一个对象！！！
+(4).交给store的是总reducer，最后注意在组件中取出状态的时候，记得“取到位”。
+```
+
+不全部写了，写重要的地方
+
+#### 1）combineReducers合并
+
+〰️ store.js
+
+- **combineReducers中存入一个对象，这个对象就是存在store中的总状态，之后取也是根据这里定义的key来取**
+
+```js
+/* 
+	该文件专门用于暴露一个store对象，整个应用只有一个store对象
+*/
+
+//引入createStore，专门用于创建redux中最为核心的store对象
+import {legacy_createStore as createStore,applyMiddleware,combineReducers} from 'redux'
+//引入为Count组件服务的reducer
+import countReducer from './reducers/count'
+//引入为Count组件服务的reducer
+import personReducer from './reducers/person'
+//引入redux-thunk，用于支持异步action
+import thunk from 'redux-thunk'
+
+//汇总所有的reducer变为一个总的reducer
+const allReducer = combineReducers({ 📍
+	he:countReducer, 📍
+	rens:personReducer 📍
+}) 📍
+
+//暴露store
+export default createStore(allReducer,applyMiddleware(thunk)) 📍
+```
+
+#### 2）在组件中取状态
+
+〰️ src/containers/Count/index.jsx【容器组件+UI组件】
+
+- 取状态就是根据存在combineReducers中的key取（之前只存了一个总和的数值，而现在存的是一个总状态的对象）
+
+```js
+import React, { Component } from 'react'
+//引入action
+import {
+	createIncrementAction,
+	createDecrementAction,
+	createIncrementAsyncAction
+} from '../../redux/actions/count'
+//引入connect用于连接UI组件与redux
+import {connect} from 'react-redux'
+
+//定义UI组件
+class Count extends Component {
+
+	state = {carName:'奔驰c63'}
+
+	//加法
+	increment = ()=>{
+		const {value} = this.selectNumber
+		this.props.jia(value*1)
+	}
+	//减法
+	decrement = ()=>{
+		const {value} = this.selectNumber
+		this.props.jian(value*1)
+	}
+	//奇数再加
+	incrementIfOdd = ()=>{
+		const {value} = this.selectNumber
+		if(this.props.count % 2 !== 0){
+			this.props.jia(value*1)
+		}
+	}
+	//异步加
+	incrementAsync = ()=>{
+		const {value} = this.selectNumber
+		this.props.jiaAsync(value*1,500)
+	}
+
+	render() {
+		//console.log('UI组件接收到的props是',this.props);
+		return (
+			<div>
+				<h2>我是Count组件,下方组件总人数为:{this.props.renshu}</h2> 📍
+				<h4>当前求和为：{this.props.count}</h4> 📍
+				<select ref={c => this.selectNumber = c}>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>&nbsp;
+				<button onClick={this.increment}>+</button>&nbsp;
+				<button onClick={this.decrement}>-</button>&nbsp;
+				<button onClick={this.incrementIfOdd}>当前求和为奇数再加</button>&nbsp;
+				<button onClick={this.incrementAsync}>异步加</button>&nbsp;
+			</div>
+		)
+	}
+}
+
+//使用connect()()创建并暴露一个Count的容器组件
+export default connect(
+	state => ({
+		count:state.he, 📍
+		renshu:state.rens.length 📍
+	}),
+	{
+		jia:createIncrementAction,
+		jian:createDecrementAction,
+		jiaAsync:createIncrementAsyncAction,
+	}
+)(Count)
+```
+
+
+
+### 8 再优化
+
+```markdown
+(1).所有变量名字要规范，尽量触发对象的简写形式。
+(2).reducers文件夹中，编写index.js专门用于汇总并暴露所有的reducer
+```
+
+〰️ redux/store.js
+
+- store里不引入每个组件的reducer，只引入一个汇总过后的总reducer，引入和汇总拆分成一个js文件
+
+```js
+/* 
+	该文件专门用于暴露一个store对象，整个应用只有一个store对象
+*/
+
+//引入createStore，专门用于创建redux中最为核心的store对象
+import {legacy_createStore as createStore,applyMiddleware} from 'redux'
+//引入汇总之后的reducer
+import reducer from './reducers' 📍
+//引入redux-thunk，用于支持异步action
+import thunk from 'redux-thunk'
+//引入redux-devtools-extension
+import {composeWithDevTools} from 'redux-devtools-extension'
+
+//暴露store 
+export default createStore(reducer,composeWithDevTools(applyMiddleware(thunk))) 📍
+```
+
+➕ src/redux/reducers/index.js
+
+```js
+/* 
+	该文件用于汇总所有的reducer为一个总的reducer
+*/
+//引入combineReducers，用于汇总多个reducer
+import {combineReducers} from 'redux'
+//引入为Count组件服务的reducer
+import count from './count'
+//引入为Person组件服务的reducer
+import persons from './person'
+
+//汇总所有的reducer变为一个总的reducer
+export default combineReducers({
+	count,
+	persons
+})
+```
+
+
+
+### 10 纯函数
+
+> 1. 一类特别的函数: 只要是同样的输入(实参)，必定得到同样的输出(返回)
+> 2. 必须遵守以下一些约束 
+>    1. 不得改写参数数据
+>    2. 不会产生任何副作用，例如网络请求，输入和输出设备
+>    3. 不能调用Date.now()或者Math.random()等不纯的方法 
+> 3. redux的reducer函数必须是一个纯函数
+
+👉 来个🌰
+
+用unshift添加元素，数组的地址没变，不会重新render
+
+<img src="restart.assets/image-20240401165903197.png" alt="image-20240401165903197" style="zoom:40%;" />
+
+**reducer是纯函数，不能改写参数数据**
+
+不用push，unshift这种对数据进行修改
+
+写成 `[data, ...preState]`
+
+
+
+### 9 高阶函数
+
+> 1. 理解: 一类特别的函数
+>    1. 情况1: 参数是函数
+>    2. 情况2: 返回是函数
+> 2. 常见的高阶函数: 
+>    1. 定时器设置函数
+>    2. 数组的forEach()/map()/filter()/reduce()/find()/bind()
+>    3. promise
+>    4. react-redux中的connect函数
+> 3. 作用: 能实现更加动态, 更加可扩展的功能
+
+
+
+## 05 - redux开发者工具的使用
+
+```markdown
+(1).yarn add redux-devtools-extension
+(2).store中进行配置
+		import {composeWithDevTools} from 'redux-devtools-extension'
+		const store = createStore(allReducer,composeWithDevTools(applyMiddleware(thunk)))
+```
+
+
+
+## 06 - 最终版
+
+🎉
+
+
+
+## 07 - 运行打包后的文件
+
+```js
+npm run build // 打包
+
+npm i serve -g // 全局安装serve
+
+serve build // 以build文件夹为根目录，运行里面的文件
+```
+
+
+
+# 6⃣️ 扩展
+
+## 01 - setState
+
+### setState更新状态的2种写法
+
+```ruby
+	(1). setState(stateChange, [callback])------对象式的setState
+            1.stateChange为状态改变对象(该对象可以体现出状态的更改)
+            2.callback是可选的回调函数, 它在状态更新完毕、界面也更新后(render调用后)才被调用
+					
+	(2). setState(updater, [callback])------函数式的setState
+            1.updater为返回stateChange对象的函数。
+            2.updater可以接收到state和props。
+            4.callback是可选的回调函数, 它在状态更新、界面也更新后(render调用后)才被调用。
+总结:
+		1.对象式的setState是函数式的setState的简写方式(语法糖)
+		2.使用原则：
+				(1).如果新状态不依赖于原状态 ===> 使用对象方式
+				(2).如果新状态依赖于原状态 ===> 使用函数方式（因为函数式直接把state传进去了，不用从this.state中拿了）
+				(3).如果需要在setState()执行后获取最新的状态数据, 要在第二个callback函数中读取(setState是异步的)
+```
+
+
+
+## 02 - lazyLoad
+
+### 路由组件的lazyLoad
+
+```js
+	//1.通过React的lazy函数配合import()函数动态加载路由组件 ===> 路由组件代码会被分开打包
+	const Login = lazy(()=>import('@/pages/Login'))
+	
+	//2.通过<Suspense>指定在加载得到路由打包文件前显示一个自定义loading界面
+	<Suspense fallback={<h1>loading.....</h1>}>
+        <Switch>
+            <Route path="/xxx" component={Xxxx}/>
+            <Redirect to="/login"/>
+        </Switch>
+    </Suspense>
+```
+
+
+
+## 03 - Hooks（之后再看吧，正片开启……）
+
+#### 1. React Hook/Hooks是什么?
+
+```
+(1). Hook是React 16.8.0版本增加的新特性/新语法
+(2). 可以让你在函数组件中使用 state 以及其他的 React 特性
+```
+
+#### 2. 三个常用的Hook
+
+```
+(1). State Hook: React.useState()
+(2). Effect Hook: React.useEffect()
+(3). Ref Hook: React.useRef()
+```
+
+#### 3. State Hook
+
+```
+(1). State Hook让函数组件也可以有state状态, 并进行状态数据的读写操作
+(2). 语法: const [xxx, setXxx] = React.useState(initValue)  
+(3). useState()说明:
+        参数: 第一次初始化指定的值在内部作缓存
+        返回值: 包含2个元素的数组, 第1个为内部当前状态值, 第2个为更新状态值的函数
+(4). setXxx()2种写法:
+        setXxx(newValue): 参数为非函数值, 直接指定新的状态值, 内部用其覆盖原来的状态值
+        setXxx(value => newValue): 参数为函数, 接收原本的状态值, 返回新的状态值, 内部用其覆盖原来的状态值
+```
+
+#### 4. Effect Hook
+
+```
+(1). Effect Hook 可以让你在函数组件中执行副作用操作(用于模拟类组件中的生命周期钩子)
+(2). React中的副作用操作:
+        发ajax请求数据获取
+        设置订阅 / 启动定时器
+        手动更改真实DOM
+(3). 语法和说明: 
+        useEffect(() => { 
+          // 在此可以执行任何带副作用操作
+          return () => { // 在组件卸载前执行
+            // 在此做一些收尾工作, 比如清除定时器/取消订阅等
+          }
+        }, [stateValue]) // 如果指定的是[], 回调函数只会在第一次render()后执行
+    
+(4). 可以把 useEffect Hook 看做如下三个函数的组合
+        componentDidMount()
+        componentDidUpdate()
+    	componentWillUnmount() 
+```
+
+#### 5. Ref Hook
+
+```
+(1). Ref Hook可以在函数组件中存储/查找组件内的标签或任意其它数据
+(2). 语法: const refContainer = useRef()
+(3). 作用:保存标签对象,功能与React.createRef()一样
+```
+
+
+
+## 04 - Fragment
+
+### 使用
+
+	<Fragment><Fragment>
+	<></>
+
+### 作用
+
+> 可以不用必须有一个真实的DOM根标签了
+>
+> Fragment标签可以拥有key属性（遍历需要key值）
+
+
+
+## 5. Context
+
+### 理解
+
+> 一种组件间通信方式, 常用于【祖组件】与【后代组件】间通信
+
+### 使用
+
+```js
+1) 创建Context容器对象：
+	const XxxContext = React.createContext()  
+	
+2) 渲染子组时，外面包裹xxxContext.Provider, 通过value属性给后代组件传递数据：
+	<xxxContext.Provider value={数据}>
+		子组件
+    </xxxContext.Provider>
+    
+3) 后代组件读取数据：
+
+	//第一种方式:仅适用于类组件 
+	  static contextType = xxxContext  // 声明接收context
+	  this.context // 读取context中的value数据
+	  
+	//第二种方式: 函数组件与类组件都可以
+	  <xxxContext.Consumer>
+	    {
+	      value => ( // value就是context中的value数据
+	        要显示的内容
+	      )
+	    }
+	  </xxxContext.Consumer>
+```
+
+### 注意
+
+	在应用开发中一般不用context, 一般都用它的封装react插件
+
+
+
+<hr/>
+
+
+## 6. 组件优化
+
+### Component的2个问题 
+
+> 1. 只要执行setState(),即使不改变状态数据, 组件也会重新render() ==> 效率低
+>
+> 2. 只当前组件重新render(), 就会自动重新render子组件，纵使子组件没有用到父组件的任何数据 ==> 效率低
+
+### 效率高的做法
+
+>  只有当组件的state或props数据发生改变时才重新render()
+
+### 原因
+
+>  Component中的shouldComponentUpdate()总是返回true
+
+### 解决
+
+	办法1: 
+		重写shouldComponentUpdate()方法
+		比较新旧state或props数据, 如果有变化才返回true, 如果没有返回false
+	办法2:  
+		使用PureComponent
+		PureComponent重写了shouldComponentUpdate(), 只有state或props数据有变化才返回true
+		注意: 
+			只是进行state和props数据的浅比较, 如果只是数据对象内部数据变了, 返回false  
+			不要直接修改state数据, 而是要产生新数据
+	项目中一般使用PureComponent来优化
+
+
+
+<hr/>
+
+
+## 7. render props
+
+### 如何向组件内部动态传入带内容的结构(标签)?
+
+	Vue中: 
+		使用slot技术, 也就是通过组件标签体传入结构  <A><B/></A>
+	React中:
+		使用children props: 通过组件标签体传入结构
+		使用render props: 通过组件标签属性传入结构,而且可以携带数据，一般用render函数属性
+
+### children props
+
+	<A>
+	  <B>xxxx</B>
+	</A>
+	{this.props.children}
+	问题: 如果B组件需要A组件内的数据, ==> 做不到 
+
+### render props
+
+	<A render={(data) => <C data={data}></C>}></A>
+	A组件: {this.props.render(内部state数据)}
+	C组件: 读取A组件传入的数据显示 {this.props.data} 
+
+
+
+<hr/>
+
+## 8. 错误边界
+
+#### 理解：
+
+错误边界(Error boundary)：用来捕获后代组件错误，渲染出备用页面
+
+#### 特点：
+
+只能捕获后代组件生命周期产生的错误，不能捕获自己组件产生的错误和其他组件在合成事件、定时器中产生的错误
+
+##### 使用方式：
+
+getDerivedStateFromError配合componentDidCatch
+
+```js
+// 生命周期函数，一旦后台组件报错，就会触发
+static getDerivedStateFromError(error) {
+    console.log(error);
+    // 在render之前触发
+    // 返回新的state
+    return {
+        hasError: true,
+    };
+}
+
+componentDidCatch(error, info) {
+    // 统计页面的错误。发送请求发送到后台去
+    console.log(error, info);
+}
+```
+
+## 9. 组件通信方式总结
+
+#### 组件间的关系：
+
+- 父子组件
+- 兄弟组件（非嵌套组件）
+- 祖孙组件（跨级组件）
+
+#### 几种通信方式：
+
+		1.props：
+			(1).children props
+			(2).render props
+		2.消息订阅-发布：
+			pubs-sub、event等等
+		3.集中式管理：
+			redux、dva等等
+		4.conText:
+			生产者-消费者模式
+
+#### 比较好的搭配方式：
+
+		父子组件：props
+		兄弟组件：消息订阅-发布、集中式管理
+		祖孙组件(跨级组件)：消息订阅-发布、集中式管理、conText(开发用的少，封装插件用的多)
 
 
 
