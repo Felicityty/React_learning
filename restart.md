@@ -3211,7 +3211,7 @@ serve build // 以build文件夹为根目录，运行里面的文件
 
 
 
-## 5. Context
+## 05 - Context
 
 ### 理解
 
@@ -3250,10 +3250,8 @@ serve build // 以build文件夹为根目录，运行里面的文件
 
 
 
-<hr/>
 
-
-## 6. 组件优化
+## 06 - 组件优化
 
 ### Component的2个问题 
 
@@ -3275,19 +3273,36 @@ serve build // 以build文件夹为根目录，运行里面的文件
 		重写shouldComponentUpdate()方法
 		比较新旧state或props数据, 如果有变化才返回true, 如果没有返回false
 	办法2:  
-		使用PureComponent
+		使用PureComponent ✅
 		PureComponent重写了shouldComponentUpdate(), 只有state或props数据有变化才返回true
 		注意: 
 			只是进行state和props数据的浅比较, 如果只是数据对象内部数据变了, 返回false  
 			不要直接修改state数据, 而是要产生新数据
 	项目中一般使用PureComponent来优化
 
+```js
+// 1 ✖️开发中不这么自己写这段逻辑
+shouldComponentUpdate(nextProps,nextState){
+	console.log(this.props,this.state); //目前的props和state
+	console.log(nextProps,nextState); //接下要变化的目标props，目标state
+	return !this.state.carName === nextState.carName
+}
+
+shouldComponentUpdate(nextProps,nextState){
+	console.log(this.props,this.state); //目前的props和state
+	console.log(nextProps,nextState); //接下要变化的目标props，目标state
+	return !this.props.carName === nextProps.carName
+}
+```
+
+<img src="restart.assets/image-20240404160045885.png" alt="image-20240404160045885" style="zoom:50%;" />
+
+<img src="restart.assets/image-20240404160331817.png" alt="image-20240404160331817" style="zoom:50%;" />
 
 
-<hr/>
 
 
-## 7. render props
+## 07 - render props
 
 ### 如何向组件内部动态传入带内容的结构(标签)?
 
@@ -3305,17 +3320,61 @@ serve build // 以build文件夹为根目录，运行里面的文件
 	{this.props.children}
 	问题: 如果B组件需要A组件内的数据, ==> 做不到 
 
-### render props
+### render props 👍
 
-	<A render={(data) => <C data={data}></C>}></A>
+这样写的话 B是可以替换成其他的 更灵活
+
+	<A render={(name)=><B name={name}/>}/>
 	A组件: {this.props.render(内部state数据)}
-	C组件: 读取A组件传入的数据显示 {this.props.data} 
+	B组件: 读取A组件传入的数据显示 {this.props.data} 
+
+🌰：
+
+```js
+import React, { Component } from 'react'
+import './index.css'
+import C from '../1_setState'
+
+export default class Parent extends Component {
+	render() {
+		return (
+			<div className="parent">
+				<h3>我是Parent组件</h3>
+				<A render={(name)=><B name={name}/>}/>
+			</div>
+		)
+	}
+}
+
+class A extends Component {
+	state = {name:'tom'}
+	render() {
+		console.log(this.props);
+		const {name} = this.state
+		return (
+			<div className="a">
+				<h3>我是A组件</h3>
+				{this.props.render(name)}
+			</div>
+		)
+	}
+}
+
+class B extends Component {
+	render() {
+		console.log('B--render');
+		return (
+			<div className="b">
+				<h3>我是B组件,{this.props.name}</h3>
+			</div>
+		)
+	}
+}
+```
 
 
 
-<hr/>
-
-## 8. 错误边界
+## 08 - 错误边界
 
 #### 理解：
 
@@ -3323,9 +3382,11 @@ serve build // 以build文件夹为根目录，运行里面的文件
 
 #### 特点：
 
-只能捕获后代组件生命周期产生的错误，不能捕获自己组件产生的错误和其他组件在合成事件、定时器中产生的错误
+**只能捕获后代组件生命周期产生的错误**，不能捕获自己组件产生的错误和其他组件在合成事件、定时器中产生的错误
 
 ##### 使用方式：
+
+【是在所在组件的父组件中做处理的】
 
 getDerivedStateFromError配合componentDidCatch
 
@@ -3346,7 +3407,9 @@ componentDidCatch(error, info) {
 }
 ```
 
-## 9. 组件通信方式总结
+
+
+## 09 - 组件通信方式总结
 
 #### 组件间的关系：
 
